@@ -1,5 +1,4 @@
 import java.sql.*;
-import java.util.ArrayList;
 
 public class Database {
     private static final Database INSTANCE = new Database();
