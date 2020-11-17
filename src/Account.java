@@ -5,10 +5,13 @@ public class Account {
     private double profitLoss, value;
     private Date createdDate;
 
-    public Account(int accountId, int userId, int positionsHeld, double profitLoss, double value){
+    public Account(int accountId, int userId, int positionsHeld, double profitLoss, double value, Date createdDate){
         this.accountId = accountId;
         this.userId = userId;
-        // TODO how to set date
+        this.positionsHeld = positionsHeld;
+        this.profitLoss = profitLoss;
+        this.value = value;
+        this.createdDate = createdDate;
     }
 
     public void incrementPositionsHeld(){

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 public class Facade {
     private static final Database database = Database.getInstance();
+    private Facade() {}
 
     // REGION USER
     public static User getUser(int userId){
@@ -37,9 +38,9 @@ public class Facade {
 
     public static void addUser(User user){
         // TODO check if user already exists
-        String query = "INSERT INTO Users(UserId, FirstName, MiddleName, LastName, SSN, PhoneNumber, Address" +
-                "Username, Password, Email) VALUES (V1, 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9', 'V10')";
-        query = query.replace("V1", String.valueOf(user.getUserId()));
+        String query = "INSERT INTO Users(UserId, FirstName, MiddleName, LastName, SSN, PhoneNumber, Address, " +
+                "Username, Password, Email) VALUES (V0, 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9', 'V10')";
+        query = query.replace("V0", String.valueOf(user.getUserId()));
         query = query.replace("V2", user.getFirstName());
         query = query.replace("V3", user.getMiddleName());
         query = query.replace("V4", user.getLastName());
@@ -52,10 +53,21 @@ public class Facade {
         database.executeUpdate(query);
     }
 
+    public static int getNextUserId(){
+        String query = "SELECT * FROM Users ORDER BY UserId DESC";
+        ResultSet resultSet = database.executeQuery(query);
+        try {
+            return resultSet.getInt("UserId") + 1;
+        }catch (SQLException e){
+            System.out.println(e.getMessage());
+        }
+        return 0;
+    }
+
     public static void updateUser(User user){
         String query = "UPDATE Users SET FirstName = 'V2', MiddleName = 'V3', LastName = 'V4', SSN = 'V5', " +
-                "PhoneNumber = 'V6', Address = 'V7', Username = 'V8', Password = 'V9', Email = 'V10' WHERE UserId = V11";
-        query = query.replace("V1", String.valueOf(user.getUserId()));
+                "PhoneNumber = 'V6', Address = 'V7', Username = 'V8', Password = 'V9', Email = 'V10' WHERE UserId = V0";
+        query = query.replace("V0", String.valueOf(user.getUserId()));
         query = query.replace("V2", user.getFirstName());
         query = query.replace("V3", user.getMiddleName());
         query = query.replace("V4", user.getLastName());
@@ -65,7 +77,6 @@ public class Facade {
         query = query.replace("V8", user.getUsername());
         query = query.replace("V9", user.getPassword());
         query = query.replace("V10", user.getEmail());
-        query = query.replace("V11", String.valueOf(user.getUserId()));
         database.executeUpdate(query);
     }
 
@@ -83,7 +94,7 @@ public class Facade {
         try {
             account = new Account(resultSet.getInt("AccountId"), resultSet.getInt("UserId"),
                     resultSet.getInt("PositionsHeld"), resultSet.getDouble("ProfitLoss"),
-                    resultSet.getDouble("Value"));
+                    resultSet.getDouble("Value"), resultSet.getDate("CreatedDate"));
         }catch (SQLException e){
             System.out.println(e.getMessage());
         }
@@ -106,15 +117,25 @@ public class Facade {
 
     public static void addAccount(Account account){
         // TODO check if user already exists
-        String query = "INSERT INTO Accounts(AccountId, UserId, ProfitLoss, PositionsHeld, Value, CreatedDate) " +
-                "VALUES (V1, V2, V3, V4, V5, V6)";
+        String query = "INSERT INTO Accounts(AccountId, UserId, ProfitLoss, PositionsHeld, Value) " +
+                "VALUES (V1, V2, V3, V4, V5)";
         query = query.replace("V1", String.valueOf(account.getAccountId()));
         query = query.replace("V2", String.valueOf(account.getUserId()));
         query = query.replace("V3", String.valueOf(account.getProfitLoss()));
         query = query.replace("V4", String.valueOf(account.getPositionsHeld()));
         query = query.replace("V5", String.valueOf(account.getValue()));
-        query = query.replace("V6", String.valueOf(account.getCreatedDate()));
         database.executeUpdate(query);
+    }
+
+    public static int getNextAccountId(){
+        String query = "SELECT * FROM Accounts ORDER BY AccountId DESC";
+        ResultSet resultSet = database.executeQuery(query);
+        try {
+            return resultSet.getInt("AccountId") + 1;
+        }catch (SQLException e){
+            System.out.println(e.getMessage());
+        }
+        return 0;
     }
 
     public static void updateAccount(Account account){
@@ -142,7 +163,7 @@ public class Facade {
         Order order = null;
         ResultSet resultSet = database.executeQuery(query);
         try {
-            order = new Order(resultSet.getInt("OrderId"), resultSet.getString("StockSymbol"),
+            order = new Order(resultSet.getInt("OrderId"), resultSet.getInt("AccountId") ,resultSet.getString("StockSymbol"),
                     Enums.OrderType.valueOf(resultSet.getString("OrderType")), resultSet.getInt("Quantity"),
                     resultSet.getDouble("Price"), Enums.OrderStatus.valueOf(resultSet.getString("OrderStatus")));
         }catch (SQLException e){
@@ -181,14 +202,15 @@ public class Facade {
 
     public static void addOrder(Order order){
         // TODO check if user already exists
-        String query = "INSERT INTO Orders(OrderId, StockSymbol, OrderType, Quantity, Price, Status)" +
-                " VALUES (V1, 'V2', 'V3', 'V4', 'V5', 'V6')";
+        String query = "INSERT INTO Orders(OrderId, AccountId, StockSymbol, OrderType, Quantity, Price, Status)" +
+                " VALUES (V1, 'V7', 'V2', 'V3', 'V4', 'V5', 'V6')";
         query = query.replace("V1", String.valueOf(order.getOrderId()));
         query = query.replace("V2", order.getStockSymbol());
         query = query.replace("V3", order.getOrderType().toString());
         query = query.replace("V4", String.valueOf(order.getQuantity()));
         query = query.replace("V5", String.valueOf(order.getPrice()));
         query = query.replace("V6", order.getOrderStatus().toString());
+        query = query.replace("V7", String.valueOf(order.getAccountId()));
         database.executeUpdate(query);
     }
 
@@ -258,4 +280,66 @@ public class Facade {
         database.executeUpdate(query);
     }
     // END REGION STOCK
+
+    // REGION OWNEDPOSITIONS
+    public static void insertOwnedPosition(OwnedPosition ownedPosition){
+        String query = "INSERT INTO OwnedPositions(AccountId, StockSymbol, OrderId, Quantity, InitialValue, MarketValue" +
+                "ProfitLoss) VALUES (V1, 'V2', V3, V4, V5, V5, V6, V7)";
+        query = query.replace("V1", String.valueOf(ownedPosition.getAccountId()));
+        query = query.replace("V2", ownedPosition.getStockSymbol());
+        query = query.replace("V3", String.valueOf(ownedPosition.getOrderId()));
+        query = query.replace("V4", String.valueOf(ownedPosition.getQuantity()));
+        query = query.replace("V5", String.valueOf(ownedPosition.getInitialValue()));
+        query = query.replace("V6", String.valueOf(ownedPosition.getMarketValue()));
+        query = query.replace("V7", String.valueOf(ownedPosition.getProfitLoss()));
+        database.executeUpdate(query);
+    }
+
+    public static void updateOwnedPosition(OwnedPosition ownedPosition){
+        String query = "UPDATE OwnedPositions SET MarketValue = V1, ProfitLoss = V2 WHERE OrderId = V3";
+        query = query.replace("V1", String.valueOf(ownedPosition.getMarketValue()));
+        query = query.replace("V2", String.valueOf(ownedPosition.getProfitLoss()));
+        query = query.replace("V3", String.valueOf(ownedPosition.getOrderId()));
+        database.executeUpdate(query);
+    }
+
+    public static OwnedPosition getOwnedPosition(int orderId){
+        String query = "SELECT * FROM OwnedPositions WHERE OrderId = " + orderId;
+        ResultSet resultSet = database.executeQuery(query);
+        try {
+            return new OwnedPosition(resultSet.getInt("AccountId"), resultSet.getString("StockSymbol"),
+                    resultSet.getInt("OrderId"), resultSet.getInt("Quantity"), resultSet.getDouble("InitialValue"),
+                    resultSet.getDouble("MarketValue"), resultSet.getDouble("ProfitLoss"));
+        }catch (SQLException e){
+            System.out.println(e.getMessage());
+        }
+        return null;
+    }
+
+    public static OwnedPosition getOwnedPosition(Order order){
+        return getOwnedPosition(order.getOrderId());
+    }
+
+    public static void deleteOwnedPosition(OwnedPosition ownedPosition){
+        String query = "DELETE FROM OwnedPositions WHERE OrderId = " + ownedPosition.getOrderId();
+        database.executeUpdate(query);
+    }
+
+    public static ArrayList<OwnedPosition> getAllOwnedPositions(){
+        ArrayList<OwnedPosition> positions = new ArrayList<>();
+        String query = "SELECT * FROM OwnedPositions";
+        ResultSet resultSet = database.executeQuery(query);
+        try {
+            while (resultSet.next()){
+                positions.add(new OwnedPosition(resultSet.getInt("AccountId"), resultSet.getString("StockSymbol"),
+                        resultSet.getInt("OrderId"), resultSet.getInt("Quantity"),
+                        resultSet.getDouble("InitialValue"), resultSet.getDouble("MarketValue"),
+                        resultSet.getDouble("ProfitLoss")));
+            }
+        }catch (SQLException e){
+            System.out.println(e.getMessage());
+        }
+        return positions;
+    }
+    // END REGION OWNEDPOSITIONS
 }
