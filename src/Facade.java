@@ -1,3 +1,4 @@
+import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -94,7 +95,7 @@ public class Facade {
         try {
             account = new Account(resultSet.getInt("AccountId"), resultSet.getInt("UserId"),
                     resultSet.getInt("PositionsHeld"), resultSet.getDouble("ProfitLoss"),
-                    resultSet.getDouble("Value"), resultSet.getDate("CreatedDate"));
+                    resultSet.getDouble("Value"), new Date(2020, 11, 17));/*resultSet.getDate("CreatedDate")*///TODO);
         }catch (SQLException e){
             System.out.println(e.getMessage());
         }
@@ -141,7 +142,6 @@ public class Facade {
     public static void updateAccount(Account account){
         String query = "UPDATE Accounts SET UserId = V2, ProfitLoss = V3, PositionsHeld = V4, Value = V5, " +
                 "CreatedDate = V6 WHERE AccountId = V7";
-        query = query.replace("V1", String.valueOf(account.getAccountId()));
         query = query.replace("V2", String.valueOf(account.getUserId()));
         query = query.replace("V3", String.valueOf(account.getProfitLoss()));
         query = query.replace("V4", String.valueOf(account.getPositionsHeld()));
@@ -165,7 +165,7 @@ public class Facade {
         try {
             order = new Order(resultSet.getInt("OrderId"), resultSet.getInt("AccountId") ,resultSet.getString("StockSymbol"),
                     Enums.OrderType.valueOf(resultSet.getString("OrderType")), resultSet.getInt("Quantity"),
-                    resultSet.getDouble("Price"), Enums.OrderStatus.valueOf(resultSet.getString("OrderStatus")));
+                    resultSet.getDouble("Price"), Enums.OrderStatus.valueOf(resultSet.getString("Status")));
         }catch (SQLException e){
             System.out.println(e.getMessage());
         }
@@ -188,7 +188,7 @@ public class Facade {
 
     public static ArrayList<Order> getPendingOrders(){
         ArrayList<Order> orders = new ArrayList<>();
-        String query = "SELECT * FROM Orders WHERE OrderStatus = 'Pending'";
+        String query = "SELECT * FROM Orders WHERE Status = 'PENDING'";
         ResultSet resultSet = database.executeQuery(query);
         try {
             while (resultSet.next()) {
@@ -224,6 +224,17 @@ public class Facade {
     public static void deleteOrder(Order order){
         String query = "DELETE FROM Orders WHERE OrderId = " + order.getOrderId();
         database.executeUpdate(query);
+    }
+
+    public static int getNextOrderId(){
+        String query = "SELECT * FROM Orders ORDER BY OrderId DESC";
+        ResultSet resultSet = database.executeQuery(query);
+        try {
+            return resultSet.getInt("OrderId") + 1;
+        }catch (SQLException e){
+            System.out.println(e.getMessage());
+        }
+        return 0;
     }
     // END REGION ORDER
 
@@ -283,8 +294,8 @@ public class Facade {
 
     // REGION OWNEDPOSITIONS
     public static void insertOwnedPosition(OwnedPosition ownedPosition){
-        String query = "INSERT INTO OwnedPositions(AccountId, StockSymbol, OrderId, Quantity, InitialValue, MarketValue" +
-                "ProfitLoss) VALUES (V1, 'V2', V3, V4, V5, V5, V6, V7)";
+        String query = "INSERT INTO OwnedPositions(AccountId, StockSymbol, OrderId, Quantity, InitialValue, MarketValue, " +
+                "ProfitLoss) VALUES (V1, 'V2', V3, V4, V5, V6, V7)";
         query = query.replace("V1", String.valueOf(ownedPosition.getAccountId()));
         query = query.replace("V2", ownedPosition.getStockSymbol());
         query = query.replace("V3", String.valueOf(ownedPosition.getOrderId()));

@@ -13,6 +13,14 @@ public class OwnedPosition {
         this.profitLoss = profitLoss;
     }
 
+    public void setProfitLoss(double profitLoss) {
+        this.profitLoss = profitLoss;
+    }
+
+    public void setMarketValue(double marketValue) {
+        this.marketValue = marketValue;
+    }
+
     public int getQuantity() {
         return quantity;
     }
