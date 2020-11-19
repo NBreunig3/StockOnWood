@@ -1,5 +1,1 @@
-Might have to add OwnedPositionId to the table so that you can use it for Order sell to sell specific position
 Will have to thread Refresher and OrderProcessor
-Update Accounts table
- - Change Value column to MarketValue which is = sum of owned positions MarketValue
- - Add column NetValue = MarketValue + ProfitLoss

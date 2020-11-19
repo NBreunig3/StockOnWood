@@ -2,17 +2,23 @@ public class Order {
     private int orderId, accountId, quantity;
     private Enums.OrderStatus orderStatus;
     private Enums.OrderType orderType;
+    private Enums.OrderBuyOrSell orderBuyOrSell;
     private String stockSymbol;
     private double price;
 
-    public Order(int orderId, int accountId, String stockSymbol, Enums.OrderType orderType, int quantity, double price, Enums.OrderStatus orderStatus){
+    public Order(int orderId, int accountId, String stockSymbol, Enums.OrderBuyOrSell buyOrSell, Enums.OrderType orderType, int quantity, double price, Enums.OrderStatus orderStatus){
         this.orderId = orderId;
         this.accountId = accountId;
         this.stockSymbol = stockSymbol;
+        this.orderBuyOrSell = buyOrSell;
         this.orderType = orderType;
         this.quantity = quantity;
         this.price = price;
         this.orderStatus = orderStatus;
+    }
+
+    public Enums.OrderBuyOrSell getOrderBuyOrSell() {
+        return orderBuyOrSell;
     }
 
     public void setOrderStatus(Enums.OrderStatus orderStatus) {

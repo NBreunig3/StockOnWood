@@ -1,9 +1,10 @@
 public class OwnedPosition {
-    private int accountId, orderId, quantity;
+    private int ownedPositionId, accountId, orderId, quantity;
     private double profitLoss, initialValue, marketValue;
     private String stockSymbol;
 
-    public OwnedPosition(int accountId, String stockSymbol, int orderId, int quantity, double initialValue, double marketValue, double profitLoss){
+    public OwnedPosition(int ownedPositionId, int accountId, String stockSymbol, int orderId, int quantity, double initialValue, double marketValue, double profitLoss){
+        this.ownedPositionId = ownedPositionId;
         this.accountId = accountId;
         this.stockSymbol = stockSymbol;
         this.orderId = orderId;
@@ -11,6 +12,10 @@ public class OwnedPosition {
         this.initialValue = initialValue;
         this.marketValue = marketValue;
         this.profitLoss = profitLoss;
+    }
+
+    public int getOwnedPositionId(){
+        return this.ownedPositionId;
     }
 
     public void setProfitLoss(double profitLoss) {
