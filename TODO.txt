@@ -1,1 +1,4 @@
+Setup stocks table
+Refresher should refresh stocks table (somehow try not to do this twice in OwnedPositions and Stocks)
+OrderProcessor fix for >1 quanities
 Will have to thread Refresher and OrderProcessor

@@ -7,8 +7,7 @@ public class Enums {
     public enum OrderType {
         MARKET,
         LIMIT,
-        STOPLOSS,
-        BUYSTOP
+        STOPLOSS
     }
 
     public enum OrderStatus {

@@ -47,6 +47,7 @@ CREATE TABLE Orders (
     OrderBuyOrSell VARCHAR(4) NOT NULL, 
     OrderType VARCHAR(10) NOT NULL,
     Quantity INTEGER NOT NULL,
-    Price DOUBLE NOT NULL,
-    Status VARCHAR(15) NOT NULL
+    Price DOUBLE,
+    Status VARCHAR(15) NOT NULL,
+    ToSellOwnedPositionId INTEGER
 );

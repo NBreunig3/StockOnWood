@@ -1,12 +1,12 @@
 public class Order {
-    private int orderId, accountId, quantity;
+    private Integer orderId, accountId, quantity, toSellOwnedPositionId;
     private Enums.OrderStatus orderStatus;
     private Enums.OrderType orderType;
     private Enums.OrderBuyOrSell orderBuyOrSell;
     private String stockSymbol;
-    private double price;
+    private Double price;
 
-    public Order(int orderId, int accountId, String stockSymbol, Enums.OrderBuyOrSell buyOrSell, Enums.OrderType orderType, int quantity, double price, Enums.OrderStatus orderStatus){
+    public Order(Integer orderId, Integer accountId, String stockSymbol, Enums.OrderBuyOrSell buyOrSell, Enums.OrderType orderType, Integer quantity, Double price, Enums.OrderStatus orderStatus, Integer toSellOwnedPositionId){
         this.orderId = orderId;
         this.accountId = accountId;
         this.stockSymbol = stockSymbol;
@@ -15,6 +15,15 @@ public class Order {
         this.quantity = quantity;
         this.price = price;
         this.orderStatus = orderStatus;
+        this.toSellOwnedPositionId = toSellOwnedPositionId;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
+    public Integer getToSellOwnedPositionId() {
+        return toSellOwnedPositionId;
     }
 
     public Enums.OrderBuyOrSell getOrderBuyOrSell() {
@@ -25,15 +34,15 @@ public class Order {
         this.orderStatus = orderStatus;
     }
 
-    public int getAccountId(){
+    public Integer getAccountId(){
         return accountId;
     }
 
-    public int getOrderId() {
+    public Integer getOrderId() {
         return orderId;
     }
 
-    public int getQuantity() {
+    public Integer getQuantity() {
         return quantity;
     }
 
@@ -49,7 +58,7 @@ public class Order {
         return stockSymbol;
     }
 
-    public double getPrice() {
+    public Double getPrice() {
         return price;
     }
 }

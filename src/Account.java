@@ -23,6 +23,10 @@ public class Account {
         return netValue;
     }
 
+    public void decrementPositionsHeld(){
+        positionsHeld -= 1;
+    }
+
     public void incrementPositionsHeld(){
         positionsHeld += 1;
     }

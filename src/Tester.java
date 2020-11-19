@@ -1,5 +1,5 @@
 public class Tester {
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) {
         Database.getInstance().connect();
 
         User user = new User(Facade.getNextUserId(), "Nathan", "Ralph", "Breunig", "123-45-6789",
@@ -11,18 +11,18 @@ public class Tester {
 
         // buy order
         Order order = new Order(Facade.getNextOrderId(), 0, "TSLA", Enums.OrderBuyOrSell.BUY, Enums.OrderType.MARKET,
-                1, 400, Enums.OrderStatus.PENDING);
+                1, null, Enums.OrderStatus.PENDING, null);
         Facade.addOrder(order);
 
-//        order = new Order(Facade.getNextOrderId(), 0, "PSEC", Enums.OrderType.BUY,
-//                4, 10, Enums.OrderStatus.PENDING);
+        OrderProcessor.process();
+        Refresher.refresh();
 
         // sell order
-//        Order order = new Order(Facade.getNextOrderId(), 0, "TSLA", Enums.OrderType.SELL,
-//                1, 400, Enums.OrderStatus.PENDING);
+        order = new Order(Facade.getNextOrderId(), 0, "TSLA", Enums.OrderBuyOrSell.SELL, Enums.OrderType.MARKET,
+                1, null, Enums.OrderStatus.PENDING, null);
+        Facade.addOrder(order);
 
         OrderProcessor.process();
-
         Refresher.refresh();
 
         Database.getInstance().disconnect();

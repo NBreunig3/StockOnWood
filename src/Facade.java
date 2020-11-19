@@ -167,7 +167,7 @@ public class Facade {
         try {
             order = new Order(resultSet.getInt("OrderId"), resultSet.getInt("AccountId") ,resultSet.getString("StockSymbol"),
                     Enums.OrderBuyOrSell.valueOf(resultSet.getString("OrderBuyOrSell")), Enums.OrderType.valueOf(resultSet.getString("OrderType")), resultSet.getInt("Quantity"),
-                    resultSet.getDouble("Price"), Enums.OrderStatus.valueOf(resultSet.getString("Status")));
+                    resultSet.getDouble("Price"), Enums.OrderStatus.valueOf(resultSet.getString("Status")), resultSet.getInt("ToSellOwnedPositionId"));
         }catch (SQLException e){
             System.out.println(e.getMessage());
         }
@@ -204,8 +204,8 @@ public class Facade {
 
     public static void addOrder(Order order){
         // TODO check if user already exists
-        String query = "INSERT INTO Orders(OrderId, AccountId, StockSymbol, OrderBuyOrSell, OrderType, Quantity, Price, Status)" +
-                " VALUES (V1, 'V7', 'V2', 'V8', 'V3', 'V4', 'V5', 'V6')";
+        String query = "INSERT INTO Orders(OrderId, AccountId, StockSymbol, OrderBuyOrSell, OrderType, Quantity, Price, Status, ToSellOwnedPositionId)" +
+                " VALUES (V1, 'V7', 'V2', 'V8', 'V3', 'V4', 'V5', 'V6', V9)";
         query = query.replace("V1", String.valueOf(order.getOrderId()));
         query = query.replace("V2", order.getStockSymbol());
         query = query.replace("V8", order.getOrderBuyOrSell().toString());
@@ -214,6 +214,7 @@ public class Facade {
         query = query.replace("V5", String.valueOf(order.getPrice()));
         query = query.replace("V6", order.getOrderStatus().toString());
         query = query.replace("V7", String.valueOf(order.getAccountId()));
+        query = query.replace("V9", String.valueOf(order.getToSellOwnedPositionId()));
         database.executeUpdate(query);
     }
 

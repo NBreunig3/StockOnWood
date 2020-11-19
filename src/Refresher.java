@@ -1,6 +1,5 @@
 import yahoofinance.Stock;
 import yahoofinance.YahooFinance;
-
 import java.io.IOException;
 import java.sql.Date;
 import java.util.ArrayList;
@@ -12,7 +11,7 @@ public class Refresher {
     private Refresher() {
     }
 
-    public static void refresh() throws InterruptedException {
+    public static void refresh() {
         ArrayList<OwnedPosition> positions = Facade.getAllOwnedPositions();
         HashMap<Integer, Account> accounts = new HashMap<>();
 
@@ -20,7 +19,7 @@ public class Refresher {
             try {
                 //Stock stock = YahooFinance.get(position.getStockSymbol());
                 //double curPrice = stock.getQuote().getPrice().doubleValue();
-                double curPrice = 83.43;
+                double curPrice = 600;
                 // Update position
                 position.setMarketValue(curPrice * position.getQuantity());
                 position.setProfitLoss((position.getMarketValue() - position.getInitialValue()));
@@ -32,13 +31,15 @@ public class Refresher {
                 Account account = accounts.get(position.getAccountId());
                 account.incrementPositionsHeld();
                 account.setMarketValue(account.getMarketValue() + position.getMarketValue());
-                account.setNetValue(account.getNetValue() + position.getProfitLoss() + position.getMarketValue());
-                account.setProfitLoss(account.getProfitLoss() + position.getProfitLoss());
+                // TODO debug to find out why account PL isn't correctly updating among other things
             } catch (Exception e) {
                 System.out.println(e.getMessage());
             }
         }
         for (Integer id : accounts.keySet()) {
+            Account account = Facade.getAccount(id);
+            accounts.get(id).setNetValue(accounts.get(id).getNetValue() + account.getNetValue());
+            accounts.get(id).setProfitLoss(accounts.get(id).getProfitLoss() + account.getProfitLoss());
             Facade.updateAccount(accounts.get(id));
         }
     }
