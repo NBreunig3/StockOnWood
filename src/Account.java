@@ -15,6 +15,10 @@ public class Account {
         this.createdDate = createdDate;
     }
 
+    public void setCreatedDate(Date createdDate) {
+        this.createdDate = createdDate;
+    }
+
     public double getMarketValue() {
         return marketValue;
     }

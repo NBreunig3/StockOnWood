@@ -15,7 +15,6 @@ public class Tester {
         Facade.addOrder(order);
 
         OrderProcessor.process();
-        Refresher.refresh();
 
         // sell order
         order = new Order(Facade.getNextOrderId(), 0, "TSLA", Enums.OrderBuyOrSell.SELL, Enums.OrderType.MARKET,
@@ -23,7 +22,6 @@ public class Tester {
         Facade.addOrder(order);
 
         OrderProcessor.process();
-        Refresher.refresh();
 
         Database.getInstance().disconnect();
     }

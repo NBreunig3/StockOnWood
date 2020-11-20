@@ -1,17 +1,20 @@
 import yahoofinance.Stock;
 import yahoofinance.YahooFinance;
 import java.io.IOException;
+import java.sql.Date;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Random;
 
 public class OrderProcessor {
-    public static long OrderProcessorRefreshRate = 10000;
+    public static final long RefreshRate = 10000;
 
     private OrderProcessor() {
     }
 
     // TODO will have to make tweaks for different quantities
     public static void process() {
+        refresh();
         ArrayList<Order> orders = Facade.getPendingOrders();
 
         for (Order order : orders) {
@@ -33,7 +36,7 @@ public class OrderProcessor {
                         }
                     }
                 } else if (order.getOrderBuyOrSell() == Enums.OrderBuyOrSell.SELL) {
-                    curPrice = 600;
+                    curPrice = 500;
                     switch (order.getOrderType()){
                         case MARKET -> {
                             processMarketSell(order, curPrice);
@@ -50,6 +53,7 @@ public class OrderProcessor {
                 System.out.println(e.getMessage());
             }
         }
+        refresh();
     }
 
     private static void processSellOrder(Order order, double curPrice){
@@ -60,8 +64,7 @@ public class OrderProcessor {
                 Account account = Facade.getAccount(order.getAccountId());
                 account.decrementPositionsHeld();
                 account.setMarketValue(account.getMarketValue() - toSell.getMarketValue());
-                account.setNetValue(account.getNetValue() - toSell.getMarketValue());
-                account.setProfitLoss(account.getProfitLoss() + toSell.getProfitLoss());
+                account.setNetValue(account.getNetValue() - toSell.getMarketValue() + toSell.getProfitLoss());
                 order.setOrderStatus(Enums.OrderStatus.COMPLETED);
                 Facade.updateOrder(order);
                 Facade.updateAccount(account);
@@ -85,7 +88,6 @@ public class OrderProcessor {
                 account.incrementPositionsHeld();
                 account.setMarketValue(account.getMarketValue() + ownedPosition.getInitialValue());
                 account.setNetValue(account.getNetValue() + ownedPosition.getInitialValue());
-                account.setProfitLoss(account.getProfitLoss() + ownedPosition.getProfitLoss());
                 Facade.updateAccount(account);
             }
         } catch (Exception e) {
@@ -124,6 +126,41 @@ public class OrderProcessor {
     private static void processStopLossSell(Order order, double curPrice){
         if (curPrice <= order.getPrice()){
             processSellOrder(order, curPrice);
+        }
+    }
+
+    public static void refresh() {
+        ArrayList<OwnedPosition> positions = Facade.getAllOwnedPositions();
+        HashMap<Integer, Account> accounts = new HashMap<>();
+
+        for (OwnedPosition position : positions) {
+            try {
+                //Stock stock = YahooFinance.get(position.getStockSymbol());
+                //double curPrice = stock.getQuote().getPrice().doubleValue();
+                double curPrice = 500;
+                // Update position
+                position.setMarketValue(curPrice * position.getQuantity());
+                position.setProfitLoss((position.getMarketValue() - position.getInitialValue()));
+                Facade.updateOwnedPosition(position);
+                // Update associated account
+                // TODO fix date
+                accounts.putIfAbsent(position.getAccountId(), new Account(position.getAccountId(), Facade.getAccount(position.getAccountId()).getUserId(),
+                        0, 0, 0, 0, new Date(2020, 12, 3)));
+                Account account = accounts.get(position.getAccountId());
+                account.incrementPositionsHeld();
+                account.setMarketValue(account.getMarketValue() + position.getMarketValue());
+                account.setProfitLoss(account.getProfitLoss() + position.getProfitLoss());
+                // TODO debug to find out why account PL isn't correctly updating among other things
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
+        }
+        for (Integer id : accounts.keySet()) {
+            Account account = Facade.getAccount(id);
+            accounts.get(id).setNetValue(account.getNetValue() + accounts.get(id).getProfitLoss());
+            accounts.get(id).setProfitLoss(account.getProfitLoss() + accounts.get(id).getProfitLoss());
+            accounts.get(id).setCreatedDate(account.getCreatedDate()); // copy over value
+            Facade.updateAccount(accounts.get(id));
         }
     }
 }

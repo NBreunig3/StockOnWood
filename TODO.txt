@@ -1,4 +1,8 @@
 Setup stocks table
-Refresher should refresh stocks table (somehow try not to do this twice in OwnedPositions and Stocks)
+Figure out working stocks API
 OrderProcessor fix for >1 quanities
 Will have to thread Refresher and OrderProcessor
+
+Previous commit notes:
+Fixed logic regarding Refresher and OrderProcessor but continuing tester based on current DB state
+Incorporated Refresher into OrderProcessor
