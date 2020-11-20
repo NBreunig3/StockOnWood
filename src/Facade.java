@@ -219,9 +219,10 @@ public class Facade {
     }
 
     public static void updateOrder(Order order){
-        String query = "UPDATE Orders SET Status = 'V1' WHERE OrderId = V2";
+        String query = "UPDATE Orders SET Status = 'V1', Price = V3 WHERE OrderId = V2";
         query = query.replace("V1", order.getOrderStatus().toString());
         query = query.replace("V2", String.valueOf(order.getOrderId()));
+        query = query.replace("V3", String.valueOf(order.getPrice()));
         database.executeUpdate(query);
     }
 
@@ -333,7 +334,16 @@ public class Facade {
     }
 
     public static OwnedPosition getOwnedPosition(Order order){
-        return getOwnedPosition(order.getOrderId());
+        String query = "SELECT * FROM OwnedPositions WHERE OrderId = " + order.getOrderId();
+        ResultSet resultSet = database.executeQuery(query);
+        try {
+            return new OwnedPosition(resultSet.getInt("OwnedPositionId"), resultSet.getInt("AccountId"), resultSet.getString("StockSymbol"),
+                    resultSet.getInt("OrderId"), resultSet.getInt("Quantity"), resultSet.getDouble("InitialValue"),
+                    resultSet.getDouble("MarketValue"), resultSet.getDouble("ProfitLoss"));
+        }catch (SQLException e){
+            System.out.println(e.getMessage());
+        }
+        return null;
     }
 
     public static void deleteOwnedPosition(OwnedPosition ownedPosition){

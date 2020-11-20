@@ -22,7 +22,7 @@ public class OrderProcessor {
                 //TODO: figure out what to do below
                 //Stock stock = YahooFinance.get(order.getStockSymbol());
                 //double curPrice = stock.getQuote().getPrice().doubleValue();
-                double curPrice = 500; // TODO should pull from Stocks table
+                double curPrice = 50; // TODO should pull from Stocks table
                 if (order.getOrderBuyOrSell() == Enums.OrderBuyOrSell.BUY) {
                     switch (order.getOrderType()){
                         case MARKET -> {
@@ -36,7 +36,7 @@ public class OrderProcessor {
                         }
                     }
                 } else if (order.getOrderBuyOrSell() == Enums.OrderBuyOrSell.SELL) {
-                    curPrice = 500;
+                    curPrice = 50;
                     switch (order.getOrderType()){
                         case MARKET -> {
                             processMarketSell(order, curPrice);
@@ -81,7 +81,7 @@ public class OrderProcessor {
                     curPrice - order.getPrice());
 
             Facade.insertOwnedPosition(ownedPosition);
-            if (Facade.getOwnedPosition(order.getOrderId()) != null) {
+            if (Facade.getOwnedPosition(order) != null) {
                 order.setOrderStatus(Enums.OrderStatus.COMPLETED);
                 Facade.updateOrder(order);
                 Account account = Facade.getAccount(order.getAccountId());
@@ -96,13 +96,15 @@ public class OrderProcessor {
     }
 
     private static void processMarketBuy(Order order, double curPrice){
-        order.setPrice(curPrice); // Since market orders don't care on price
-        processBuyOrder(order, curPrice);
+        Order o = new Order(order);
+        o.setPrice(curPrice); // Since market orders don't care on price
+        processBuyOrder(o, curPrice);
     }
 
     private static void processMarketSell(Order order, double curPrice){
-        order.setPrice(curPrice); // Since market orders don't care on price
-        processSellOrder(order, curPrice);
+        Order o = new Order(order);
+        o.setPrice(curPrice); // Since market orders don't care on price
+        processSellOrder(o, curPrice);
     }
 
     private static void processLimitBuy(Order order, double curPrice){
@@ -132,12 +134,15 @@ public class OrderProcessor {
     public static void refresh() {
         ArrayList<OwnedPosition> positions = Facade.getAllOwnedPositions();
         HashMap<Integer, Account> accounts = new HashMap<>();
+        double netChange = 0;
 
         for (OwnedPosition position : positions) {
             try {
                 //Stock stock = YahooFinance.get(position.getStockSymbol());
                 //double curPrice = stock.getQuote().getPrice().doubleValue();
-                double curPrice = 500;
+                double prevPrice = position.getMarketValue();
+                double curPrice = 50;
+                netChange = curPrice - prevPrice;
                 // Update position
                 position.setMarketValue(curPrice * position.getQuantity());
                 position.setProfitLoss((position.getMarketValue() - position.getInitialValue()));
@@ -157,8 +162,13 @@ public class OrderProcessor {
         }
         for (Integer id : accounts.keySet()) {
             Account account = Facade.getAccount(id);
-            accounts.get(id).setNetValue(account.getNetValue() + accounts.get(id).getProfitLoss());
-            accounts.get(id).setProfitLoss(account.getProfitLoss() + accounts.get(id).getProfitLoss());
+            if (netChange >= 0){
+                accounts.get(id).setNetValue(accounts.get(id).getMarketValue() + account.getProfitLoss());
+                accounts.get(id).setProfitLoss(account.getProfitLoss() + accounts.get(id).getProfitLoss());
+            }else {
+                accounts.get(id).setNetValue(accounts.get(id).getMarketValue() + account.getProfitLoss() + netChange);
+                accounts.get(id).setProfitLoss(account.getProfitLoss() + accounts.get(id).getProfitLoss() + netChange);
+            }
             accounts.get(id).setCreatedDate(account.getCreatedDate()); // copy over value
             Facade.updateAccount(accounts.get(id));
         }

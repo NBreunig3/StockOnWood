@@ -18,6 +18,18 @@ public class Order {
         this.toSellOwnedPositionId = toSellOwnedPositionId;
     }
 
+    public Order(Order order){
+        this.orderId = order.getOrderId();
+        this.accountId = order.getAccountId();
+        this.quantity = order.getQuantity();
+        this.toSellOwnedPositionId = order.getToSellOwnedPositionId();
+        this.orderStatus = order.getOrderStatus();
+        this.orderType = order.getOrderType();
+        this.orderBuyOrSell = order.getOrderBuyOrSell();
+        this.stockSymbol = order.getStockSymbol();
+        this.price = order.getPrice();
+    }
+
     public void setPrice(double price) {
         this.price = price;
     }
