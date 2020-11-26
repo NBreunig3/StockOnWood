@@ -1,6 +1,3 @@
-import yahoofinance.Stock;
-import yahoofinance.YahooFinance;
-import java.io.IOException;
 import java.sql.Date;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,17 +9,13 @@ public class OrderProcessor {
     private OrderProcessor() {
     }
 
-    // TODO will have to make tweaks for different quantities
     public static void process() {
         refresh();
         ArrayList<Order> orders = Facade.getPendingOrders();
 
         for (Order order : orders) {
             try {
-                //TODO: figure out what to do below
-                //Stock stock = YahooFinance.get(order.getStockSymbol());
-                //double curPrice = stock.getQuote().getPrice().doubleValue();
-                double curPrice = 50; // TODO should pull from Stocks table
+                double curPrice = Facade.getStock(order.getStockSymbol()).getCurrentPrice();
                 if (order.getOrderBuyOrSell() == Enums.OrderBuyOrSell.BUY) {
                     switch (order.getOrderType()){
                         case MARKET -> {
@@ -36,7 +29,6 @@ public class OrderProcessor {
                         }
                     }
                 } else if (order.getOrderBuyOrSell() == Enums.OrderBuyOrSell.SELL) {
-                    curPrice = 50;
                     switch (order.getOrderType()){
                         case MARKET -> {
                             processMarketSell(order, curPrice);
@@ -60,14 +52,25 @@ public class OrderProcessor {
         try {
             OwnedPosition toSell = Facade.getOwnedPosition(order.getToSellOwnedPositionId());
             if (toSell != null){
-                Facade.deleteOwnedPosition(toSell);
-                Account account = Facade.getAccount(order.getAccountId());
-                account.decrementPositionsHeld();
-                account.setMarketValue(account.getMarketValue() - toSell.getMarketValue());
-                account.setNetValue(account.getNetValue() - toSell.getMarketValue() + toSell.getProfitLoss());
-                order.setOrderStatus(Enums.OrderStatus.COMPLETED);
-                Facade.updateOrder(order);
-                Facade.updateAccount(account);
+                if (toSell.getQuantity() == order.getQuantity()) {
+                    Facade.deleteOwnedPosition(toSell);
+                    Account account = Facade.getAccount(order.getAccountId());
+                    account.decrementPositionsHeld();
+                    account.setMarketValue(account.getMarketValue() - toSell.getMarketValue());
+                    account.setNetValue(account.getNetValue() - toSell.getMarketValue() + toSell.getProfitLoss());
+                    order.setOrderStatus(Enums.OrderStatus.COMPLETED);
+                    Facade.updateOrder(order);
+                    Facade.updateAccount(account);
+                }else if (toSell.getQuantity() > order.getQuantity()){
+                    Account account = Facade.getAccount(order.getAccountId());
+                    account.setMarketValue(account.getMarketValue() - (toSell.getMarketValue()/toSell.getQuantity())*order.getQuantity());
+                    account.setNetValue(account.getNetValue() - ((toSell.getMarketValue()/toSell.getQuantity())*order.getQuantity()) + (toSell.getProfitLoss()/toSell.getQuantity())*order.getQuantity());
+                    order.setOrderStatus(Enums.OrderStatus.COMPLETED);
+                    Facade.updateOrder(order);
+                    Facade.updateAccount(account);
+                }else{
+                    throw new Error("Can't sell more shares than you own. ");
+                }
             }
         }catch (Exception e){
             System.out.println(e);
@@ -135,13 +138,13 @@ public class OrderProcessor {
         ArrayList<OwnedPosition> positions = Facade.getAllOwnedPositions();
         HashMap<Integer, Account> accounts = new HashMap<>();
         double netChange = 0;
+        Random random = new Random();
+        double newPrice = random.nextDouble() * random.nextInt(10);
 
         for (OwnedPosition position : positions) {
             try {
-                //Stock stock = YahooFinance.get(position.getStockSymbol());
-                //double curPrice = stock.getQuote().getPrice().doubleValue();
                 double prevPrice = position.getMarketValue();
-                double curPrice = 50;
+                double curPrice = newPrice;
                 netChange = curPrice - prevPrice;
                 // Update position
                 position.setMarketValue(curPrice * position.getQuantity());
@@ -155,7 +158,6 @@ public class OrderProcessor {
                 account.incrementPositionsHeld();
                 account.setMarketValue(account.getMarketValue() + position.getMarketValue());
                 account.setProfitLoss(account.getProfitLoss() + position.getProfitLoss());
-                // TODO debug to find out why account PL isn't correctly updating among other things
             } catch (Exception e) {
                 System.out.println(e.getMessage());
             }

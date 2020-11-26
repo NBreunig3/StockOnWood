@@ -1,11 +1,21 @@
 public class Stock {
     private String stockSymbol, name, description, sector;
+    private double currentPrice;
 
-    public Stock(String stockSymbol, String name, String description, String sector){
+    public Stock(String stockSymbol, String name, String description, String sector, double currentPrice){
         this.stockSymbol = stockSymbol;
         this.name = name;
         this.description = description;
         this.sector = sector;
+        this.currentPrice = currentPrice;
+    }
+
+    public double getCurrentPrice() {
+        return currentPrice;
+    }
+
+    public void setCurrentPrice(double currentPrice) {
+        this.currentPrice = currentPrice;
     }
 
     public String getStockSymbol() {

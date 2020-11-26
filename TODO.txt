@@ -1,8 +1,6 @@
-Setup stocks table
-Figure out working stocks API
-OrderProcessor fix for >1 quanities
 GUI
+- Scrollbars
+- Pending orders clickable to show all orders
 Will have to thread Refresher and OrderProcessor
 
 Previous commit notes:
-Fixed logic regarding Refresher and OrderProcessor but continuing tester based on current DB state (fixed more issues)

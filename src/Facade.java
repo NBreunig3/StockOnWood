@@ -23,6 +23,21 @@ public class Facade {
         return user;
     }
 
+    public static User getUser(String username, String password){
+        String query = "SELECT * FROM Users WHERE Username = '" + username + "' AND Password = '" + password + "'";
+        User user = null;
+        ResultSet resultSet = database.executeQuery(query);
+        try {
+            user = new User(resultSet.getInt("UserId"), resultSet.getString("FirstName"), resultSet.getString("MiddleName"),
+                    resultSet.getString("LastName"), resultSet.getString("SSN"), resultSet.getString("PhoneNumber"),
+                    resultSet.getString("Address"), resultSet.getString("Username"), resultSet.getString("Password"),
+                    resultSet.getString("Email"));
+        }catch (SQLException e){
+            System.out.println(e.getMessage());
+        }
+        return user;
+    }
+
     public static ArrayList<User> getAllUsers(){
         ArrayList<User> users = new ArrayList<>();
         String query = "SELECT * FROM Users";
@@ -90,6 +105,20 @@ public class Facade {
     // REGION ACCOUNT
     public static Account getAccount(int accountId){
         String query = "SELECT * FROM Accounts WHERE AccountId = " + accountId;
+        Account account = null;
+        ResultSet resultSet = database.executeQuery(query);
+        try {
+            account = new Account(resultSet.getInt("AccountId"), resultSet.getInt("UserId"),
+                    resultSet.getInt("PositionsHeld"), resultSet.getDouble("ProfitLoss"),
+                    resultSet.getDouble("MarketValue"), resultSet.getDouble("NetValue") , new Date(2020, 11, 17));/*resultSet.getDate("CreatedDate")*///TODO);
+        }catch (SQLException e){
+            System.out.println(e.getMessage());
+        }
+        return account;
+    }
+
+    public static Account getAccount(User user){
+        String query = "SELECT * FROM Accounts WHERE UserId = " + user.getUserId();
         Account account = null;
         ResultSet resultSet = database.executeQuery(query);
         try {
@@ -174,6 +203,20 @@ public class Facade {
         return order;
     }
 
+    public static ArrayList<Order> getOrders(Account account){
+        ArrayList<Order> orders = new ArrayList<>();
+        String query = "SELECT * FROM Orders WHERE AccountId = " + account.getAccountId();
+        ResultSet resultSet = database.executeQuery(query);
+        try {
+            while (resultSet.next()) {
+                orders.add(getOrder(resultSet.getInt("OrderId")));
+            }
+        }catch (SQLException e){
+            System.out.println(e.getMessage());
+        }
+        return orders;
+    }
+
     public static ArrayList<Order> getAllOrders(){
         ArrayList<Order> orders = new ArrayList<>();
         String query = "SELECT * FROM Orders";
@@ -245,12 +288,12 @@ public class Facade {
 
     // REGION STOCK
     public static Stock getStock(String stockSymbol){
-        String query = "SELECT * FROM Stocks WHERE StockSymbol = " + stockSymbol;
+        String query = "SELECT * FROM Stocks WHERE StockSymbol = '" + stockSymbol + "'";
         Stock stock = null;
         ResultSet resultSet = database.executeQuery(query);
         try {
             stock = new Stock(resultSet.getString("StockSymbol"), resultSet.getString("Name"),
-                    resultSet.getString("Description"), resultSet.getString("Sector"));
+                    resultSet.getString("Description"), resultSet.getString("Sector"), resultSet.getDouble("CurrentPrice"));
         }catch (SQLException e){
             System.out.println(e.getMessage());
         }
@@ -273,21 +316,23 @@ public class Facade {
 
     public static void addStock(Stock stock){
         // TODO check if user already exists
-        String query = "INSERT INTO Stocks(StockSymbol, Name, Description, Sector)" +
-                " VALUES (V1, 'V2', 'V3', 'V4')";
-        query = query.replace("V1", String.valueOf(stock.getStockSymbol()));
+        String query = "INSERT INTO Stocks(StockSymbol, Name, Description, Sector, CurrentPrice)" +
+                " VALUES ('V1', 'V2', 'V3', 'V4', V5)";
+        query = query.replace("V1", stock.getStockSymbol());
         query = query.replace("V2", stock.getName());
         query = query.replace("V3", stock.getDescription());
         query = query.replace("V4", stock.getSector());
+        query = query.replace("V5", String.valueOf(stock.getCurrentPrice()));
         database.executeUpdate(query);
     }
 
     public static void updateStock(Stock stock){
-        String query = "UPDATE Stocks SET Name = 'V2', Description = 'V3', Sector = 'V4' WHERE StockSymbol = 'V5'";
+        String query = "UPDATE Stocks SET Name = 'V2', Description = 'V3', Sector = 'V4', CurrentPrice = V6 WHERE StockSymbol = 'V5'";
         query = query.replace("V2", stock.getName());
         query = query.replace("V3", stock.getDescription());
         query = query.replace("V4", stock.getSector());
         query = query.replace("V5", stock.getStockSymbol());
+        query = query.replace("V6", String.valueOf(stock.getCurrentPrice()));
         database.executeUpdate(query);
     }
 
@@ -349,6 +394,23 @@ public class Facade {
     public static void deleteOwnedPosition(OwnedPosition ownedPosition){
         String query = "DELETE FROM OwnedPositions WHERE OwnedPositionId = " + ownedPosition.getOwnedPositionId();
         database.executeUpdate(query);
+    }
+
+    public static ArrayList<OwnedPosition> getOwnedPositions(Account account){
+        ArrayList<OwnedPosition> positions = new ArrayList<>();
+        String query = "SELECT * FROM OwnedPositions WHERE AccountId = " + account.getAccountId();
+        ResultSet resultSet = database.executeQuery(query);
+        try {
+            while (resultSet.next()){
+                positions.add(new OwnedPosition(resultSet.getInt("OwnedPositionId"), resultSet.getInt("AccountId"), resultSet.getString("StockSymbol"),
+                        resultSet.getInt("OrderId"), resultSet.getInt("Quantity"),
+                        resultSet.getDouble("InitialValue"), resultSet.getDouble("MarketValue"),
+                        resultSet.getDouble("ProfitLoss")));
+            }
+        }catch (SQLException e){
+            System.out.println(e.getMessage());
+        }
+        return positions;
     }
 
     public static ArrayList<OwnedPosition> getAllOwnedPositions(){
