@@ -391,6 +391,23 @@ public class Facade {
         return null;
     }
 
+    public static ArrayList<OwnedPosition> getOwnedPositions(Account account, Stock stock){
+        ArrayList<OwnedPosition> positions = new ArrayList<>();
+        String query = "SELECT * FROM OwnedPositions WHERE AccountId = " + account.getAccountId() + " AND StockSymbol = '" + stock.getStockSymbol() + "'";
+        ResultSet resultSet = database.executeQuery(query);
+        try {
+            while (resultSet.next()){
+                positions.add(new OwnedPosition(resultSet.getInt("OwnedPositionId"), resultSet.getInt("AccountId"), resultSet.getString("StockSymbol"),
+                        resultSet.getInt("OrderId"), resultSet.getInt("Quantity"),
+                        resultSet.getDouble("InitialValue"), resultSet.getDouble("MarketValue"),
+                        resultSet.getDouble("ProfitLoss")));
+            }
+        }catch (SQLException e){
+            System.out.println(e.getMessage());
+        }
+        return positions;
+    }
+
     public static void deleteOwnedPosition(OwnedPosition ownedPosition){
         String query = "DELETE FROM OwnedPositions WHERE OwnedPositionId = " + ownedPosition.getOwnedPositionId();
         database.executeUpdate(query);

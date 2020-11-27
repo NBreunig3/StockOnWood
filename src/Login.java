@@ -47,6 +47,8 @@ public class Login {
                 Home.frame.setContentPane(home.mainPanel);
                 Home.frame.pack();
                 Home.frame.setVisible(true);
+                Thread backgroundProcessor = new Thread(new BackgroundProcessor());
+                backgroundProcessor.start();
             }
         }
     }

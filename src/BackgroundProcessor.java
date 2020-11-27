@@ -3,14 +3,26 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 
-public class OrderProcessor {
-    public static final long RefreshRate = 10000;
+public class BackgroundProcessor implements Runnable{
+    public static final long ProcessRate = 10000;
 
-    private OrderProcessor() {
+    @Override
+    public void run() {
+        while (true) {
+            System.out.println("Refresh Started");
+            refresh();
+            processOrders();
+            refresh();
+            System.out.println("Refresh Ended");
+            try {
+                Thread.sleep(ProcessRate);
+            } catch (InterruptedException e) {
+                System.out.println("BackgroundProcessor Interrupted: " + e.getMessage());
+            }
+        }
     }
 
-    public static void process() {
-        refresh();
+    private void processOrders() {
         ArrayList<Order> orders = Facade.getPendingOrders();
 
         for (Order order : orders) {
@@ -42,10 +54,9 @@ public class OrderProcessor {
                     }
                 }
             } catch (Exception e) {
-                System.out.println(e.getMessage());
+                System.out.println("Error processing orders: " + e.getMessage());
             }
         }
-        refresh();
     }
 
     private static void processSellOrder(Order order, double curPrice){
@@ -94,7 +105,7 @@ public class OrderProcessor {
                 Facade.updateAccount(account);
             }
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            System.out.println("Error processing buy order" + e.getMessage());
         }
     }
 
@@ -134,17 +145,33 @@ public class OrderProcessor {
         }
     }
 
-    public static void refresh() {
+    private void refresh() {
+        ArrayList<Stock> stocks = Facade.getAllStocks();
         ArrayList<OwnedPosition> positions = Facade.getAllOwnedPositions();
         HashMap<Integer, Account> accounts = new HashMap<>();
         double netChange = 0;
         Random random = new Random();
-        double newPrice = random.nextDouble() * random.nextInt(10);
+
+        for (Stock s : stocks){
+            try {
+                double prevPrice = s.getCurrentPrice();
+                double newPrice;
+                if (random.nextInt(2) == 0) {
+                    newPrice = prevPrice + (prevPrice * 0.01);
+                }else {
+                    newPrice = prevPrice - (prevPrice * 0.01);
+                }
+                s.setCurrentPrice(newPrice);
+                Facade.updateStock(s);
+            } catch (Exception e){
+                System.out.println("Error refreshing stocks: " + e.getMessage());
+            }
+        }
 
         for (OwnedPosition position : positions) {
             try {
                 double prevPrice = position.getMarketValue();
-                double curPrice = newPrice;
+                double curPrice = Facade.getStock(position.getStockSymbol()).getCurrentPrice();
                 netChange = curPrice - prevPrice;
                 // Update position
                 position.setMarketValue(curPrice * position.getQuantity());
@@ -159,7 +186,7 @@ public class OrderProcessor {
                 account.setMarketValue(account.getMarketValue() + position.getMarketValue());
                 account.setProfitLoss(account.getProfitLoss() + position.getProfitLoss());
             } catch (Exception e) {
-                System.out.println(e.getMessage());
+                System.out.println("Error refreshing owned positions: " + e.getMessage());
             }
         }
         for (Integer id : accounts.keySet()) {

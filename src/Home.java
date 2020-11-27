@@ -1,29 +1,38 @@
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
-public class Home {
+public class Home{
     public static JFrame frame;
     public JPanel mainPanel;
     private JTextField searchBox;
     private JTable indexTable;
     private JTable ordersTable;
-    private JScrollPane ordersTableScroll = new JScrollPane();
     private JPanel stocksOrdersPanel;
     private JPanel mainLabelPanel;
     private JPanel mainFunctionsPanel;
     private JTable positionsTable;
     private JPanel positionsPanel;
     private JTable stocksTable;
-    private JScrollPane stocksTableScroll;
     private JPanel stockPanel;
     private JPanel accountValuesPanel;
     private JLabel accountNetValue;
     private JLabel accountMarketValue;
     private JLabel accountPriceLoss;
+    private JLabel lblStockOnWood;
 
-    private User user;
-    private Account account;
+    public static DecimalFormat twoDecimalPlaces = new DecimalFormat("#.##");
+    private Timer timer = new Timer(true);
+    private TimerTask uiRefresh = new UIRefresher();
+    private static boolean firstRun = true;
+
+    public static User user;
+    public static Account account;
     private ArrayList<Stock> stocks;
     private ArrayList<Order> orders;
     private ArrayList<OwnedPosition> positions;
@@ -35,7 +44,12 @@ public class Home {
         this.stocks = Facade.getAllStocks();
         this.orders = Facade.getOrders(account);
         this.positions = Facade.getOwnedPositions(account);
+        stocksTable.addMouseListener(new StocksTableSelect());
         refreshUI();
+        if (firstRun) {
+            timer.scheduleAtFixedRate(uiRefresh, 5000, 10000);
+        }
+        firstRun = false;
     }
 
     public static void main(String[] args) {
@@ -50,9 +64,12 @@ public class Home {
     // Use this method to refresh the UI when it opens from another form
     // Set correct values
     public void refreshUI(){
-        accountNetValue.setText("$" + account.getNetValue());
-        accountMarketValue.setText("$" + account.getMarketValue());
-        accountPriceLoss.setText("$" + account.getProfitLoss());
+        this.stocks = Facade.getAllStocks();
+        this.orders = Facade.getAllOrders();
+        this.positions = Facade.getOwnedPositions(account);
+        accountNetValue.setText("$" + twoDecimalPlaces.format(account.getNetValue()));
+        accountMarketValue.setText("$" + twoDecimalPlaces.format(account.getMarketValue()));
+        accountPriceLoss.setText("$" + twoDecimalPlaces.format(account.getProfitLoss()));
         refreshOrdersTable();
         refreshStocksTable();
         refreshPositionsTable();
@@ -68,7 +85,7 @@ public class Home {
         positionsTable.setModel(positionsTableModel);
         positionsTableModel.addRow(columns);
         for (OwnedPosition p : positions){
-            positionsTableModel.addRow(new Object[]{p.getStockSymbol(), p.getQuantity(), p.getInitialValue(), p.getMarketValue(), p.getProfitLoss()});
+            positionsTableModel.addRow(new Object[]{p.getStockSymbol(), p.getQuantity(), twoDecimalPlaces.format(p.getInitialValue()), twoDecimalPlaces.format(p.getMarketValue()), twoDecimalPlaces.format(p.getProfitLoss())});
         }
         //ordersTableScroll.setViewportView(ordersTable);
     }
@@ -83,13 +100,12 @@ public class Home {
         ordersTable.setModel(ordersTableModel);
         ordersTableModel.addRow(columns);
         for (Order o : orders){
-            ordersTableModel.addRow(new Object[]{o.getOrderId(), o.getStockSymbol(), o.getOrderBuyOrSell(), o.getOrderType(), o.getQuantity(), o.getPrice()});
+            ordersTableModel.addRow(new Object[]{o.getOrderId(), o.getStockSymbol(), o.getOrderBuyOrSell(), o.getOrderType(), o.getQuantity(), twoDecimalPlaces.format(o.getPrice())});
         }
         //ordersTableScroll.setViewportView(ordersTable);
     }
 
     private void refreshStocksTable(){
-        //stocksTable.setEnabled(false);
         DefaultTableModel stocksTableModel = new DefaultTableModel();
         String[] columns = {"Symbol", "Name", "Price"};
         for (String c : columns){
@@ -98,11 +114,49 @@ public class Home {
         stocksTable.setModel(stocksTableModel);
         stocksTableModel.addRow(columns);
         for (Stock s : stocks){
-            stocksTableModel.addRow(new Object[]{s.getStockSymbol(), s.getName(), s.getCurrentPrice()});
+            stocksTableModel.addRow(new Object[]{s.getStockSymbol(), s.getName(), twoDecimalPlaces.format(s.getCurrentPrice())});
         }
-        //TODO figure out
-//        stocksTableScroll = new JScrollPane(stocksTable);
-//        stocksTableScroll.setVisible(true);
-//        stockPanel.add(stocksTableScroll);
     }
+
+    private class StocksTableSelect implements MouseListener {
+
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            if (SwingUtilities.isRightMouseButton(e)) {
+                System.out.println();
+                StockInfo stockInfo = new StockInfo(Facade.getStock(stocksTable.getValueAt(stocksTable.rowAtPoint(e.getPoint()), 0).toString()));
+                Home.frame.setContentPane(stockInfo.mainPanel);
+                Home.frame.pack();
+                Home.frame.setVisible(true);
+            }
+        }
+
+        @Override
+        public void mousePressed(MouseEvent e) {
+
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+
+        }
+
+        @Override
+        public void mouseEntered(MouseEvent e) {
+
+        }
+
+        @Override
+        public void mouseExited(MouseEvent e) {
+
+        }
+    }
+
+   private class UIRefresher extends TimerTask {
+       @Override
+       public void run() {
+           refreshUI();
+           System.out.println("UIRefreshed");
+       }
+   }
 }
