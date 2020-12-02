@@ -109,7 +109,7 @@ public class Facade {
         ResultSet resultSet = database.executeQuery(query);
         try {
             account = new Account(resultSet.getInt("AccountId"), resultSet.getInt("UserId"),
-                    resultSet.getInt("PositionsHeld"), resultSet.getDouble("ProfitLoss"),
+                    resultSet.getInt("PositionsHeld"), resultSet.getDouble("ProfitLoss"), resultSet.getDouble("SoldProfitLoss"),
                     resultSet.getDouble("MarketValue"), resultSet.getDouble("NetValue") , new Date(2020, 11, 17));/*resultSet.getDate("CreatedDate")*///TODO);
         }catch (SQLException e){
             System.out.println(e.getMessage());
@@ -123,7 +123,7 @@ public class Facade {
         ResultSet resultSet = database.executeQuery(query);
         try {
             account = new Account(resultSet.getInt("AccountId"), resultSet.getInt("UserId"),
-                    resultSet.getInt("PositionsHeld"), resultSet.getDouble("ProfitLoss"),
+                    resultSet.getInt("PositionsHeld"), resultSet.getDouble("ProfitLoss"), resultSet.getDouble("SoldProfitLoss"),
                     resultSet.getDouble("MarketValue"), resultSet.getDouble("NetValue") , new Date(2020, 11, 17));/*resultSet.getDate("CreatedDate")*///TODO);
         }catch (SQLException e){
             System.out.println(e.getMessage());
@@ -147,14 +147,15 @@ public class Facade {
 
     public static void addAccount(Account account){
         // TODO check if user already exists
-        String query = "INSERT INTO Accounts(AccountId, UserId, ProfitLoss, PositionsHeld, MarketValue, NetValue) " +
-                "VALUES (V1, V2, V3, V4, V5, V6)";
+        String query = "INSERT INTO Accounts(AccountId, UserId, ProfitLoss, SoldProfitLoss, PositionsHeld, MarketValue, NetValue) " +
+                "VALUES (V1, V2, V3, V7, V4, V5, V6)";
         query = query.replace("V1", String.valueOf(account.getAccountId()));
         query = query.replace("V2", String.valueOf(account.getUserId()));
         query = query.replace("V3", String.valueOf(account.getProfitLoss()));
         query = query.replace("V4", String.valueOf(account.getPositionsHeld()));
         query = query.replace("V5", String.valueOf(account.getMarketValue()));
         query = query.replace("V6", String.valueOf(account.getNetValue()));
+        query = query.replace("V7", String.valueOf(account.getSoldProfitLoss()));
         database.executeUpdate(query);
     }
 
@@ -171,7 +172,7 @@ public class Facade {
 
     public static void updateAccount(Account account){
         String query = "UPDATE Accounts SET UserId = V2, ProfitLoss = V3, PositionsHeld = V4, MarketValue = V5, " +
-                "CreatedDate = V6, NetValue = V8 WHERE AccountId = V7";
+                "CreatedDate = V6, NetValue = V8, SoldProfitLoss = V9 WHERE AccountId = V7";
         query = query.replace("V2", String.valueOf(account.getUserId()));
         query = query.replace("V3", String.valueOf(account.getProfitLoss()));
         query = query.replace("V4", String.valueOf(account.getPositionsHeld()));
@@ -179,6 +180,7 @@ public class Facade {
         query = query.replace("V6", String.valueOf(account.getCreatedDate()));
         query = query.replace("V7", String.valueOf(account.getAccountId()));
         query = query.replace("V8", String.valueOf(account.getNetValue()));
+        query = query.replace("V9", String.valueOf(account.getSoldProfitLoss()));
         database.executeUpdate(query);
     }
 
@@ -234,6 +236,20 @@ public class Facade {
     public static ArrayList<Order> getPendingOrders(){
         ArrayList<Order> orders = new ArrayList<>();
         String query = "SELECT * FROM Orders WHERE Status = 'PENDING'";
+        ResultSet resultSet = database.executeQuery(query);
+        try {
+            while (resultSet.next()) {
+                orders.add(getOrder(resultSet.getInt("OrderId")));
+            }
+        }catch (SQLException e){
+            System.out.println(e.getMessage());
+        }
+        return orders;
+    }
+
+    public static ArrayList<Order> getCompletedOrders(){
+        ArrayList<Order> orders = new ArrayList<>();
+        String query = "SELECT * FROM Orders WHERE Status = 'COMPLETED'";
         ResultSet resultSet = database.executeQuery(query);
         try {
             while (resultSet.next()) {
@@ -458,4 +474,121 @@ public class Facade {
         return 0;
     }
     // END REGION OWNEDPOSITIONS
+
+    // REGION SOLDPOSITIONS
+    public static void insertSoldPosition(SoldPosition soldPosition){
+        String query = "INSERT INTO SoldPositions(SoldPositionId, AccountId, StockSymbol, OrderId, Quantity, InitialValue, MarketValue, " +
+                "ProfitLoss) VALUES (V0, V1, 'V2', V3, V4, V5, V6, V7)";
+        query = query.replace("V0", String.valueOf(soldPosition.getSoldPositionId()));
+        query = query.replace("V1", String.valueOf(soldPosition.getAccountId()));
+        query = query.replace("V2", soldPosition.getStockSymbol());
+        query = query.replace("V3", String.valueOf(soldPosition.getOrderId()));
+        query = query.replace("V4", String.valueOf(soldPosition.getQuantity()));
+        query = query.replace("V5", String.valueOf(soldPosition.getInitialValue()));
+        query = query.replace("V6", String.valueOf(soldPosition.getMarketValue()));
+        query = query.replace("V7", String.valueOf(soldPosition.getProfitLoss()));
+        database.executeUpdate(query);
+    }
+
+    public static void updateSoldPosition(SoldPosition soldPosition){
+        String query = "UPDATE SoldPositions SET MarketValue = V1, ProfitLoss = V2 WHERE SoldPositionId = V3";
+        query = query.replace("V1", String.valueOf(soldPosition.getMarketValue()));
+        query = query.replace("V2", String.valueOf(soldPosition.getProfitLoss()));
+        query = query.replace("V3", String.valueOf(soldPosition.getSoldPositionId()));
+        database.executeUpdate(query);
+    }
+
+    public static SoldPosition getSoldPosition(int soldPositionId){
+        String query = "SELECT * FROM SoldPositions WHERE SoldPositionId = " + soldPositionId;
+        ResultSet resultSet = database.executeQuery(query);
+        try {
+            return new SoldPosition(resultSet.getInt("SoldPositionId"), resultSet.getInt("AccountId"), resultSet.getString("StockSymbol"),
+                    resultSet.getInt("OrderId"), resultSet.getInt("Quantity"), resultSet.getDouble("InitialValue"),
+                    resultSet.getDouble("MarketValue"), resultSet.getDouble("ProfitLoss"));
+        }catch (SQLException e){
+            System.out.println(e.getMessage());
+        }
+        return null;
+    }
+
+    public static SoldPosition getSoldPosition(Order order){
+        String query = "SELECT * FROM SoldPositions WHERE OrderId = " + order.getOrderId();
+        ResultSet resultSet = database.executeQuery(query);
+        try {
+            return new SoldPosition(resultSet.getInt("SoldPositionId"), resultSet.getInt("AccountId"), resultSet.getString("StockSymbol"),
+                    resultSet.getInt("OrderId"), resultSet.getInt("Quantity"), resultSet.getDouble("InitialValue"),
+                    resultSet.getDouble("MarketValue"), resultSet.getDouble("ProfitLoss"));
+        }catch (SQLException e){
+            System.out.println(e.getMessage());
+        }
+        return null;
+    }
+
+    public static ArrayList<SoldPosition> getSoldPositions(Account account, Stock stock){
+        ArrayList<SoldPosition> positions = new ArrayList<>();
+        String query = "SELECT * FROM SoldPositions WHERE AccountId = " + account.getAccountId() + " AND StockSymbol = '" + stock.getStockSymbol() + "'";
+        ResultSet resultSet = database.executeQuery(query);
+        try {
+            while (resultSet.next()){
+                positions.add(new SoldPosition(resultSet.getInt("SoldPositionId"), resultSet.getInt("AccountId"), resultSet.getString("StockSymbol"),
+                        resultSet.getInt("OrderId"), resultSet.getInt("Quantity"),
+                        resultSet.getDouble("InitialValue"), resultSet.getDouble("MarketValue"),
+                        resultSet.getDouble("ProfitLoss")));
+            }
+        }catch (SQLException e){
+            System.out.println(e.getMessage());
+        }
+        return positions;
+    }
+
+    public static void deleteSoldPosition(SoldPosition soldPosition){
+        String query = "DELETE FROM SoldPositions WHERE SoldPositionId = " + soldPosition.getSoldPositionId();
+        database.executeUpdate(query);
+    }
+
+    public static ArrayList<SoldPosition> getSoldPositions(Account account){
+        ArrayList<SoldPosition> positions = new ArrayList<>();
+        String query = "SELECT * FROM SoldPositions WHERE AccountId = " + account.getAccountId();
+        ResultSet resultSet = database.executeQuery(query);
+        try {
+            while (resultSet.next()){
+                positions.add(new SoldPosition(resultSet.getInt("SoldPositionId"), resultSet.getInt("AccountId"), resultSet.getString("StockSymbol"),
+                        resultSet.getInt("OrderId"), resultSet.getInt("Quantity"),
+                        resultSet.getDouble("InitialValue"), resultSet.getDouble("MarketValue"),
+                        resultSet.getDouble("ProfitLoss")));
+            }
+        }catch (SQLException e){
+            System.out.println(e.getMessage());
+        }
+        return positions;
+    }
+
+    public static ArrayList<SoldPosition> getAllSoldPositions(){
+        ArrayList<SoldPosition> positions = new ArrayList<>();
+        String query = "SELECT * FROM SoldPositions";
+        ResultSet resultSet = database.executeQuery(query);
+        try {
+            while (resultSet.next()){
+                positions.add(new SoldPosition(resultSet.getInt("SoldPositionId"), resultSet.getInt("AccountId"), resultSet.getString("StockSymbol"),
+                        resultSet.getInt("OrderId"), resultSet.getInt("Quantity"),
+                        resultSet.getDouble("InitialValue"), resultSet.getDouble("MarketValue"),
+                        resultSet.getDouble("ProfitLoss")));
+            }
+        }catch (SQLException e){
+            System.out.println(e.getMessage());
+        }
+        return positions;
+    }
+
+    public static int getNextSoldPositionId(){
+        String query = "SELECT * FROM SoldPositions ORDER BY SoldPositionId DESC";
+        ResultSet resultSet = database.executeQuery(query);
+        try {
+            return resultSet.getInt("SoldPositionId") + 1;
+        }catch (SQLException e){
+            System.out.println(e.getMessage());
+        }
+        return 0;
+    }
+    // END REGION SOLDPOSITIONS
 }

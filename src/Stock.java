@@ -33,4 +33,13 @@ public class Stock {
     public String getSector() {
         return sector;
     }
+
+    @Override
+    public boolean equals(Object o){
+        if (!(o instanceof Stock)){
+            return false;
+        }
+        o = (Stock)o;
+        return this.stockSymbol.equals(((Stock) o).stockSymbol);
+    }
 }

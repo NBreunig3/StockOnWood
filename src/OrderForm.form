@@ -16,7 +16,7 @@
           <text value="Create Order"/>
         </properties>
       </component>
-      <component id="3b0a3" class="javax.swing.JComboBox" binding="comboBox1" default-binding="true">
+      <component id="3b0a3" class="javax.swing.JComboBox" binding="buyorsellCombo">
         <constraints>
           <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
         </constraints>
@@ -38,7 +38,7 @@
               <text value="Stock:"/>
             </properties>
           </component>
-          <component id="e7854" class="javax.swing.JTextField" binding="stock">
+          <component id="e7854" class="javax.swing.JTextField" binding="stockText">
             <constraints>
               <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
                 <preferred-size width="150" height="-1"/>

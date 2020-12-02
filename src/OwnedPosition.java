@@ -1,7 +1,5 @@
-public class OwnedPosition {
-    private int ownedPositionId, accountId, orderId, quantity;
-    private double profitLoss, initialValue, marketValue;
-    private String stockSymbol;
+public class OwnedPosition extends Position{
+    private int ownedPositionId;
 
     public OwnedPosition(int ownedPositionId, int accountId, String stockSymbol, int orderId, int quantity, double initialValue, double marketValue, double profitLoss){
         this.ownedPositionId = ownedPositionId;
@@ -14,43 +12,13 @@ public class OwnedPosition {
         this.profitLoss = profitLoss;
     }
 
+    @Override
     public int getOwnedPositionId(){
         return this.ownedPositionId;
     }
 
-    public void setProfitLoss(double profitLoss) {
-        this.profitLoss = profitLoss;
-    }
-
-    public void setMarketValue(double marketValue) {
-        this.marketValue = marketValue;
-    }
-
-    public int getQuantity() {
-        return quantity;
-    }
-
-    public double getInitialValue() {
-        return initialValue;
-    }
-
-    public double getMarketValue() {
-        return marketValue;
-    }
-
-    public int getAccountId() {
-        return accountId;
-    }
-
-    public int getOrderId() {
-        return orderId;
-    }
-
-    public double getProfitLoss() {
-        return profitLoss;
-    }
-
-    public String getStockSymbol() {
-        return stockSymbol;
+    @Override
+    public int getSoldPositionId() {
+        return -1;
     }
 }

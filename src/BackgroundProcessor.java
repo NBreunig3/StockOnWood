@@ -59,16 +59,19 @@ public class BackgroundProcessor implements Runnable{
         }
     }
 
-    private static void processSellOrder(Order order, double curPrice){
+    private static void processSellOrder(Order order){
         try {
             OwnedPosition toSell = Facade.getOwnedPosition(order.getToSellOwnedPositionId());
             if (toSell != null){
                 if (toSell.getQuantity() == order.getQuantity()) {
                     Facade.deleteOwnedPosition(toSell);
+                    Facade.insertSoldPosition(new SoldPosition(Facade.getNextSoldPositionId(), toSell.getAccountId(), toSell.getStockSymbol(),
+                            toSell.getOrderId(), toSell.getQuantity(), toSell.getInitialValue(), toSell.getMarketValue(), toSell.getProfitLoss()));
                     Account account = Facade.getAccount(order.getAccountId());
                     account.decrementPositionsHeld();
                     account.setMarketValue(account.getMarketValue() - toSell.getMarketValue());
                     account.setNetValue(account.getNetValue() - toSell.getMarketValue() + toSell.getProfitLoss());
+                    account.setSoldProfitLoss(toSell.getProfitLoss());
                     order.setOrderStatus(Enums.OrderStatus.COMPLETED);
                     Facade.updateOrder(order);
                     Facade.updateAccount(account);
@@ -76,6 +79,9 @@ public class BackgroundProcessor implements Runnable{
                     Account account = Facade.getAccount(order.getAccountId());
                     account.setMarketValue(account.getMarketValue() - (toSell.getMarketValue()/toSell.getQuantity())*order.getQuantity());
                     account.setNetValue(account.getNetValue() - ((toSell.getMarketValue()/toSell.getQuantity())*order.getQuantity()) + (toSell.getProfitLoss()/toSell.getQuantity())*order.getQuantity());
+                    account.setSoldProfitLoss((toSell.getMarketValue()/toSell.getQuantity())*order.getQuantity());
+                    Facade.insertSoldPosition(new SoldPosition(Facade.getNextSoldPositionId(), toSell.getAccountId(), toSell.getStockSymbol(),
+                            toSell.getOrderId(), toSell.getQuantity(), toSell.getInitialValue()/order.getQuantity(), toSell.getMarketValue()/order.getQuantity(), toSell.getProfitLoss()/order.getQuantity()));
                     order.setOrderStatus(Enums.OrderStatus.COMPLETED);
                     Facade.updateOrder(order);
                     Facade.updateAccount(account);
@@ -118,7 +124,7 @@ public class BackgroundProcessor implements Runnable{
     private static void processMarketSell(Order order, double curPrice){
         Order o = new Order(order);
         o.setPrice(curPrice); // Since market orders don't care on price
-        processSellOrder(o, curPrice);
+        processSellOrder(o);
     }
 
     private static void processLimitBuy(Order order, double curPrice){
@@ -129,7 +135,7 @@ public class BackgroundProcessor implements Runnable{
 
     private static void processLimitSell(Order order, double curPrice){
         if (curPrice >= order.getPrice()){
-            processSellOrder(order, curPrice);
+            processSellOrder(order);
         }
     }
 
@@ -141,7 +147,7 @@ public class BackgroundProcessor implements Runnable{
 
     private static void processStopLossSell(Order order, double curPrice){
         if (curPrice <= order.getPrice()){
-            processSellOrder(order, curPrice);
+            processSellOrder(order);
         }
     }
 
@@ -149,7 +155,6 @@ public class BackgroundProcessor implements Runnable{
         ArrayList<Stock> stocks = Facade.getAllStocks();
         ArrayList<OwnedPosition> positions = Facade.getAllOwnedPositions();
         HashMap<Integer, Account> accounts = new HashMap<>();
-        double netChange = 0;
         Random random = new Random();
 
         for (Stock s : stocks){
@@ -157,7 +162,7 @@ public class BackgroundProcessor implements Runnable{
                 double prevPrice = s.getCurrentPrice();
                 double newPrice;
                 if (random.nextInt(2) == 0) {
-                    newPrice = prevPrice + (prevPrice * 0.01);
+                    newPrice = prevPrice + (prevPrice * 0.05);
                 }else {
                     newPrice = prevPrice - (prevPrice * 0.01);
                 }
@@ -170,9 +175,7 @@ public class BackgroundProcessor implements Runnable{
 
         for (OwnedPosition position : positions) {
             try {
-                double prevPrice = position.getMarketValue();
                 double curPrice = Facade.getStock(position.getStockSymbol()).getCurrentPrice();
-                netChange = curPrice - prevPrice;
                 // Update position
                 position.setMarketValue(curPrice * position.getQuantity());
                 position.setProfitLoss((position.getMarketValue() - position.getInitialValue()));
@@ -180,7 +183,7 @@ public class BackgroundProcessor implements Runnable{
                 // Update associated account
                 // TODO fix date
                 accounts.putIfAbsent(position.getAccountId(), new Account(position.getAccountId(), Facade.getAccount(position.getAccountId()).getUserId(),
-                        0, 0, 0, 0, new Date(2020, 12, 3)));
+                        0, 0, 0, 0,0, new Date(2020, 12, 3)));
                 Account account = accounts.get(position.getAccountId());
                 account.incrementPositionsHeld();
                 account.setMarketValue(account.getMarketValue() + position.getMarketValue());
@@ -191,14 +194,10 @@ public class BackgroundProcessor implements Runnable{
         }
         for (Integer id : accounts.keySet()) {
             Account account = Facade.getAccount(id);
-            if (netChange >= 0){
-                accounts.get(id).setNetValue(accounts.get(id).getMarketValue() + account.getProfitLoss());
-                accounts.get(id).setProfitLoss(account.getProfitLoss() + accounts.get(id).getProfitLoss());
-            }else {
-                accounts.get(id).setNetValue(accounts.get(id).getMarketValue() + account.getProfitLoss() + netChange);
-                accounts.get(id).setProfitLoss(account.getProfitLoss() + accounts.get(id).getProfitLoss() + netChange);
-            }
             accounts.get(id).setCreatedDate(account.getCreatedDate()); // copy over value
+            accounts.get(id).setSoldProfitLoss(account.getSoldProfitLoss()); // copy over value
+            accounts.get(id).setProfitLoss(accounts.get(id).getProfitLoss() + account.getSoldProfitLoss());
+            accounts.get(id).setNetValue(accounts.get(id).getMarketValue() + account.getSoldProfitLoss());
             Facade.updateAccount(accounts.get(id));
         }
     }

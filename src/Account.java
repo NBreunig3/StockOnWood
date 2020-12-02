@@ -2,17 +2,26 @@ import java.util.Date;
 
 public class Account {
     private int accountId, userId, positionsHeld;
-    private double profitLoss, marketValue, netValue;
+    private double profitLoss, soldProfitLoss, marketValue, netValue;
     private Date createdDate;
 
-    public Account(int accountId, int userId, int positionsHeld, double profitLoss, double marketValue, double netValue, Date createdDate){
+    public Account(int accountId, int userId, int positionsHeld, double profitLoss, double soldProfitLoss, double marketValue, double netValue, Date createdDate){
         this.accountId = accountId;
         this.userId = userId;
         this.positionsHeld = positionsHeld;
         this.profitLoss = profitLoss;
+        this.soldProfitLoss = soldProfitLoss;
         this.marketValue = marketValue;
         this.netValue = netValue;
         this.createdDate = createdDate;
+    }
+
+    public double getSoldProfitLoss() {
+        return soldProfitLoss;
+    }
+
+    public void setSoldProfitLoss(double soldProfitLoss) {
+        this.soldProfitLoss = soldProfitLoss;
     }
 
     public void setCreatedDate(Date createdDate) {

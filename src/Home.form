@@ -142,7 +142,7 @@
               <selectionForeground color="-2049"/>
             </properties>
           </component>
-          <component id="50ae6" class="javax.swing.JLabel">
+          <component id="50ae6" class="javax.swing.JLabel" binding="ordersLabel">
             <constraints>
               <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
             </constraints>
@@ -171,7 +171,7 @@
               <autoResizeMode value="4"/>
             </properties>
           </component>
-          <component id="c578c" class="javax.swing.JLabel">
+          <component id="c578c" class="javax.swing.JLabel" binding="positionsLabel">
             <constraints>
               <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
             </constraints>

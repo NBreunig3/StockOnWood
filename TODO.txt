@@ -1,6 +1,5 @@
-GUI
 - Scrollbars
-- Pending orders clickable to show all orders
-Will have to thread Refresher and OrderProcessor
-
-Previous commit notes:
+- Search functionality
+- Add logo
+- Add "Hello {name}" to Home Screen
+- Add account stats
