@@ -3,9 +3,8 @@ import java.util.Date;
 public class Account {
     private int accountId, userId, positionsHeld;
     private double profitLoss, soldProfitLoss, marketValue, netValue;
-    private Date createdDate;
 
-    public Account(int accountId, int userId, int positionsHeld, double profitLoss, double soldProfitLoss, double marketValue, double netValue, Date createdDate){
+    public Account(int accountId, int userId, int positionsHeld, double profitLoss, double soldProfitLoss, double marketValue, double netValue){
         this.accountId = accountId;
         this.userId = userId;
         this.positionsHeld = positionsHeld;
@@ -13,7 +12,6 @@ public class Account {
         this.soldProfitLoss = soldProfitLoss;
         this.marketValue = marketValue;
         this.netValue = netValue;
-        this.createdDate = createdDate;
     }
 
     public double getSoldProfitLoss() {
@@ -22,10 +20,6 @@ public class Account {
 
     public void setSoldProfitLoss(double soldProfitLoss) {
         this.soldProfitLoss = soldProfitLoss;
-    }
-
-    public void setCreatedDate(Date createdDate) {
-        this.createdDate = createdDate;
     }
 
     public double getMarketValue() {
@@ -70,9 +64,5 @@ public class Account {
 
     public double getProfitLoss() {
         return profitLoss;
-    }
-
-    public Date getCreatedDate() {
-        return createdDate;
     }
 }

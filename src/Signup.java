@@ -26,8 +26,7 @@ public class Signup {
             User user = new User(Facade.getNextUserId(), firstName.getText(), middleName.getText(), lastName.getText(),
                     ssn.getText(), phoneNumber.getText(), address.getText(), username.getText(), password.getText(), email.getText());
             Facade.addUser(user);
-            // TODO Question: Get date
-            Facade.addAccount(new Account(Facade.getNextAccountId(), user.getUserId(), 0, 0, 0, 0, 0, new Date(11122020)));
+            Facade.addAccount(new Account(Facade.getNextAccountId(), user.getUserId(), 0, 0, 0, 0, 0));
             Home home = new Home(user);
             Home.frame.setContentPane(home.mainPanel);
             Home.frame.pack();

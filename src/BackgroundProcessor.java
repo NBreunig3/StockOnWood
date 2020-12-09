@@ -9,11 +9,11 @@ public class BackgroundProcessor implements Runnable{
     @Override
     public void run() {
         while (true) {
-            System.out.println("Refresh Started");
+//            System.out.println("Refresh Started");
             refresh();
             processOrders();
             refresh();
-            System.out.println("Refresh Ended");
+//            System.out.println("Refresh Ended");
             try {
                 Thread.sleep(ProcessRate);
             } catch (InterruptedException e) {
@@ -162,7 +162,7 @@ public class BackgroundProcessor implements Runnable{
                 double prevPrice = s.getCurrentPrice();
                 double newPrice;
                 if (random.nextInt(2) == 0) {
-                    newPrice = prevPrice + (prevPrice * 0.05);
+                    newPrice = prevPrice + (prevPrice * 0.01);
                 }else {
                     newPrice = prevPrice - (prevPrice * 0.01);
                 }
@@ -181,9 +181,8 @@ public class BackgroundProcessor implements Runnable{
                 position.setProfitLoss((position.getMarketValue() - position.getInitialValue()));
                 Facade.updateOwnedPosition(position);
                 // Update associated account
-                // TODO fix date
                 accounts.putIfAbsent(position.getAccountId(), new Account(position.getAccountId(), Facade.getAccount(position.getAccountId()).getUserId(),
-                        0, 0, 0, 0,0, new Date(2020, 12, 3)));
+                        0, 0, 0, 0,0));
                 Account account = accounts.get(position.getAccountId());
                 account.incrementPositionsHeld();
                 account.setMarketValue(account.getMarketValue() + position.getMarketValue());
@@ -194,7 +193,6 @@ public class BackgroundProcessor implements Runnable{
         }
         for (Integer id : accounts.keySet()) {
             Account account = Facade.getAccount(id);
-            accounts.get(id).setCreatedDate(account.getCreatedDate()); // copy over value
             accounts.get(id).setSoldProfitLoss(account.getSoldProfitLoss()); // copy over value
             accounts.get(id).setProfitLoss(accounts.get(id).getProfitLoss() + account.getSoldProfitLoss());
             accounts.get(id).setNetValue(accounts.get(id).getMarketValue() + account.getSoldProfitLoss());

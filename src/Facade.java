@@ -110,7 +110,7 @@ public class Facade {
         try {
             account = new Account(resultSet.getInt("AccountId"), resultSet.getInt("UserId"),
                     resultSet.getInt("PositionsHeld"), resultSet.getDouble("ProfitLoss"), resultSet.getDouble("SoldProfitLoss"),
-                    resultSet.getDouble("MarketValue"), resultSet.getDouble("NetValue") , new Date(2020, 11, 17));/*resultSet.getDate("CreatedDate")*///TODO);
+                    resultSet.getDouble("MarketValue"), resultSet.getDouble("NetValue"));
         }catch (SQLException e){
             System.out.println(e.getMessage());
         }
@@ -124,7 +124,7 @@ public class Facade {
         try {
             account = new Account(resultSet.getInt("AccountId"), resultSet.getInt("UserId"),
                     resultSet.getInt("PositionsHeld"), resultSet.getDouble("ProfitLoss"), resultSet.getDouble("SoldProfitLoss"),
-                    resultSet.getDouble("MarketValue"), resultSet.getDouble("NetValue") , new Date(2020, 11, 17));/*resultSet.getDate("CreatedDate")*///TODO);
+                    resultSet.getDouble("MarketValue"), resultSet.getDouble("NetValue"));
         }catch (SQLException e){
             System.out.println(e.getMessage());
         }
@@ -172,12 +172,11 @@ public class Facade {
 
     public static void updateAccount(Account account){
         String query = "UPDATE Accounts SET UserId = V2, ProfitLoss = V3, PositionsHeld = V4, MarketValue = V5, " +
-                "CreatedDate = V6, NetValue = V8, SoldProfitLoss = V9 WHERE AccountId = V7";
+                "NetValue = V8, SoldProfitLoss = V9 WHERE AccountId = V7";
         query = query.replace("V2", String.valueOf(account.getUserId()));
         query = query.replace("V3", String.valueOf(account.getProfitLoss()));
         query = query.replace("V4", String.valueOf(account.getPositionsHeld()));
         query = query.replace("V5", String.valueOf(account.getMarketValue()));
-        query = query.replace("V6", String.valueOf(account.getCreatedDate()));
         query = query.replace("V7", String.valueOf(account.getAccountId()));
         query = query.replace("V8", String.valueOf(account.getNetValue()));
         query = query.replace("V9", String.valueOf(account.getSoldProfitLoss()));
@@ -356,6 +355,20 @@ public class Facade {
         String query = "DELETE FROM Stocks WHERE StockSymbol = " + stock.getStockSymbol();
         database.executeUpdate(query);
     }
+
+    public static ArrayList<Stock> getStocksLike(String filter){
+        ArrayList<Stock> stocks = new ArrayList<>();
+        String query = "SELECT * FROM Stocks WHERE StockSymbol LIKE '" + filter + "'";
+        ResultSet resultSet = database.executeQuery(query);
+        try {
+            while (resultSet.next()) {
+                stocks.add(getStock(resultSet.getString("StockSymbol")));
+            }
+        }catch (SQLException e){
+            System.out.println(e.getMessage());
+        }
+        return stocks;
+    }
     // END REGION STOCK
 
     // REGION OWNEDPOSITIONS
@@ -417,6 +430,38 @@ public class Facade {
                         resultSet.getInt("OrderId"), resultSet.getInt("Quantity"),
                         resultSet.getDouble("InitialValue"), resultSet.getDouble("MarketValue"),
                         resultSet.getDouble("ProfitLoss")));
+            }
+        }catch (SQLException e){
+            System.out.println(e.getMessage());
+        }
+        return positions;
+    }
+
+    public static ArrayList<OwnedPosition> getCombinedOwnedStocks(Account account){
+        ArrayList<OwnedPosition> positions = new ArrayList<>();
+        String query = "SELECT StockSymbol, Sum(ProfitLoss) AS ProfitLoss FROM OwnedPositions WHERE AccountId = " + account.getAccountId() + " GROUP BY StockSymbol ORDER BY ProfitLoss DESC";
+        ResultSet resultSet = database.executeQuery(query);
+        try {
+            while (resultSet.next()){
+                positions.add(new OwnedPosition(-1, -1, resultSet.getString("StockSymbol"),
+                        -1, -1, -1, -1,
+                        resultSet.getDouble("ProfitLoss")));
+            }
+        }catch (SQLException e){
+            System.out.println(e.getMessage());
+        }
+        return positions;
+    }
+
+    public static ArrayList<OwnedPosition> getTopProfitableOwnedPositions(Account account){
+        ArrayList<OwnedPosition> positions = new ArrayList<>();
+        String query = "SELECT StockSymbol, Sum(ProfitLoss) AS TotalProfitLoss FROM OwnedPositions WHERE AccountId = " + account.getAccountId() + " GROUP BY StockSymbol\n" +
+                "HAVING Sum(ProfitLoss) > 0 AND Sum(ProfitLoss) > (SELECT Avg(ProfitLoss) FROM OwnedPositions WHERE ProfitLoss > 0) ORDER BY Sum(ProfitLoss) DESC";
+        ResultSet resultSet = database.executeQuery(query);
+        try {
+            while (resultSet.next()){
+                positions.add(new OwnedPosition(-1, -1, resultSet.getString("StockSymbol"),
+                        -1, -1, -1, -1, resultSet.getDouble("TotalProfitLoss")));
             }
         }catch (SQLException e){
             System.out.println(e.getMessage());

@@ -1,14 +1,7 @@
 public abstract class Position {
-    // TODO Question: Way to make these available to children but not instance vars, only through getter/setters
-    // TODO Could use the getter/setters in the child constructors?
     protected int accountId, orderId, quantity;
     protected double profitLoss, initialValue, marketValue;
     protected String stockSymbol;
-
-    // TODO Question: Best way to handle this?
-    public abstract int getOwnedPositionId();
-
-    public abstract int getSoldPositionId();
 
     public void setProfitLoss(double profitLoss) {
         this.profitLoss = profitLoss;

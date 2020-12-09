@@ -12,13 +12,7 @@ public class SoldPosition extends Position{
         this.profitLoss = profitLoss;
     }
 
-    @Override
     public int getSoldPositionId() {
         return soldPositionId;
-    }
-
-    @Override
-    public int getOwnedPositionId() {
-        return -1;
     }
 }

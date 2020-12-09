@@ -1,7 +1,6 @@
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.event.*;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,7 +11,7 @@ public class Home{
     public static JFrame frame;
     public JPanel mainPanel;
     private JTextField searchBox;
-    private JTable indexTable;
+    private JTable searchTable;
     private JTable ordersTable;
     private JPanel stocksOrdersPanel;
     private JPanel mainLabelPanel;
@@ -28,11 +27,15 @@ public class Home{
     private JLabel lblStockOnWood;
     private JLabel ordersLabel;
     private JLabel positionsLabel;
+    private JLabel lblWelcome;
+    private JButton refreshButton;
+    private JButton viewAccountButton;
+    private JButton exitButton;
 
     public static DecimalFormat twoDecimalPlaces = new DecimalFormat("0.00");
-    private static Timer timer = new Timer(true);
-    private TimerTask uiRefresh = new UIRefresher();
-    private boolean timerStarted = false;
+    private Timer timer;
+//    private TimerTask uiRefresh = new UIRefresher();
+//    private boolean timerStarted = false;
     private static boolean firstRun = true;
 
     public static User user;
@@ -47,18 +50,22 @@ public class Home{
     public Home(User u){
         // On Startup
         user = u;
+        lblWelcome.setText("Welcome " + u.getFirstName() + "!");
         account = Facade.getAccount(user);
         stocks = Facade.getAllStocks();
         orders = Facade.getOrders(account);
         positions = Facade.getOwnedPositions(account);
-        if (timerStarted){
-            timer.cancel();
-            timer.purge();
-        }
+//        if (timerStarted){
+//            timer.cancel();
+//            timer.purge();
+//        }
         // TODO figure out how to only do this once
-        timer.scheduleAtFixedRate(uiRefresh, 5000, 10000);
-        timerStarted = true;
+//        timer = new Timer(true);
+//        timer.scheduleAtFixedRate(uiRefresh, 0, 10000);
+//        timerStarted = true;
         if (firstRun) {
+//            Thread uiRefresher = new Thread(new UIRefresher());
+//            uiRefresher.start();
             Thread backgroundProcessor = new Thread(new BackgroundProcessor());
             backgroundProcessor.start();
             for (Stock s : stocks) {
@@ -67,10 +74,32 @@ public class Home{
         }
         stocksTable.addMouseListener(new StocksTableSelect());
         positionsTable.addMouseListener(new PositionsTableSelect());
+        searchTable.addMouseListener(new SearchTableSelect());
         ordersLabel.addMouseListener(new OrderSwitch());
         positionsLabel.addMouseListener(new PositionsSwitch());
-        refreshUI();
+        searchBox.addKeyListener(new SearchBox());
         firstRun = false;
+        refreshUI();
+        refreshButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                refreshUI();
+            }
+        });
+        exitButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.exit(0);
+            }
+        });
+        viewAccountButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                frame.setContentPane(new AccountDetail(account).mainPanel);
+                frame.setVisible(true);
+                frame.pack();
+            }
+        });
     }
 
     public static void main(String[] args) {
@@ -80,6 +109,22 @@ public class Home{
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.pack();
         frame.setVisible(true);
+    }
+
+    private class UIRefresher implements Runnable {
+        @Override
+        public void run() {
+            while (true) {
+                System.out.println("UI Refresh Started");
+                refreshUI();
+                System.out.println("UI Refresh Ended");
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    System.out.println("UIRefresher Interrupted: " + e.getMessage());
+                }
+            }
+        }
     }
 
     // Use this method to refresh the UI when it opens from another form
@@ -110,9 +155,14 @@ public class Home{
         }
         positionsTable.setModel(positionsTableModel);
         positionsTableModel.addRow(columns);
-        // TODO Question: See below
         for (Position p : positions){
-            positionsTableModel.addRow(new Object[]{positionsTableType == 1 ? p.getOwnedPositionId() : p.getSoldPositionId(), p.getStockSymbol(), p.getQuantity(), "$" + twoDecimalPlaces.format(p.getInitialValue()), "$" + twoDecimalPlaces.format(p.getMarketValue()), "$" + twoDecimalPlaces.format(p.getProfitLoss())});
+            if (p instanceof OwnedPosition){
+                OwnedPosition o = (OwnedPosition)p;
+                positionsTableModel.addRow(new Object[]{o.getOwnedPositionId(), o.getStockSymbol(), o.getQuantity(), "$" + twoDecimalPlaces.format(o.getInitialValue()), "$" + twoDecimalPlaces.format(o.getMarketValue()), "$" + twoDecimalPlaces.format(o.getProfitLoss())});
+            }else if (p instanceof SoldPosition){
+                SoldPosition o = (SoldPosition)p;
+                positionsTableModel.addRow(new Object[]{o.getSoldPositionId(), o.getStockSymbol(), o.getQuantity(), "$" + twoDecimalPlaces.format(o.getInitialValue()), "$" + twoDecimalPlaces.format(o.getMarketValue()), "$" + twoDecimalPlaces.format(o.getProfitLoss())});
+            }
         }
         if (selectedIndex != -1 && selectedIndex < positionsTable.getRowCount()) {
             positionsTable.setRowSelectionInterval(selectedIndex, selectedIndex);
@@ -168,6 +218,51 @@ public class Home{
         }
         if (selectedIndex != -1 && selectedIndex < stocksTable.getRowCount()) {
             stocksTable.setRowSelectionInterval(selectedIndex, selectedIndex);
+        }
+    }
+
+    private class SearchBox implements KeyListener {
+        @Override
+        public void keyTyped(KeyEvent e) {
+
+        }
+
+        @Override
+        public void keyPressed(KeyEvent e) {
+            if (e.getKeyCode() == KeyEvent.VK_ENTER){
+                DefaultTableModel searchTableModel = new DefaultTableModel();
+                if (!searchBox.getText().trim().equals("")) {
+                    ArrayList<Stock> results = Facade.getStocksLike(searchBox.getText().trim() + "%");
+
+                    String[] columns = {"Symbol", "Name", "Open", "Current", "P/L"};
+                    for (String c : columns) {
+                        searchTableModel.addColumn(c);
+                    }
+                    searchTable.setModel(searchTableModel);
+                    searchTableModel.addRow(columns);
+                    for (Stock s : results) {
+                        String percentChange = "";
+                        if (openPrices.get(s.getStockSymbol()) > s.getCurrentPrice()) {
+                            // decrease
+                            percentChange = "-" + String.valueOf(twoDecimalPlaces.format((Math.abs(openPrices.get(s.getStockSymbol()) - s.getCurrentPrice())) / openPrices.get(s.getStockSymbol()) * 100) + "%");
+                        } else if (openPrices.get(s.getStockSymbol()) < s.getCurrentPrice()) {
+                            // increase
+                            percentChange = "+" + String.valueOf(twoDecimalPlaces.format((Math.abs(openPrices.get(s.getStockSymbol()) - s.getCurrentPrice())) / openPrices.get(s.getStockSymbol()) * 100) + "%");
+                        } else {
+                            percentChange = "0.00%";
+                        }
+                        searchTableModel.addRow(new Object[]{s.getStockSymbol(), s.getName(), "$" + twoDecimalPlaces.format(openPrices.get(s.getStockSymbol())), "$" + twoDecimalPlaces.format(s.getCurrentPrice()), percentChange});
+                    }
+                }else {
+                    searchTableModel.setRowCount(0);
+                    searchTableModel.setColumnCount(0);
+                }
+            }
+        }
+
+        @Override
+        public void keyReleased(KeyEvent e) {
+
         }
     }
 
@@ -264,6 +359,39 @@ public class Home{
         }
     }
 
+    private class SearchTableSelect implements MouseListener {
+
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            if (SwingUtilities.isRightMouseButton(e)) {
+                StockInfo stockInfo = new StockInfo(Facade.getStock(searchTable.getValueAt(positionsTable.rowAtPoint(e.getPoint()), 0).toString()));
+                Home.frame.setContentPane(stockInfo.mainPanel);
+                Home.frame.pack();
+                Home.frame.setVisible(true);
+            }
+        }
+
+        @Override
+        public void mousePressed(MouseEvent e) {
+
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+
+        }
+
+        @Override
+        public void mouseEntered(MouseEvent e) {
+
+        }
+
+        @Override
+        public void mouseExited(MouseEvent e) {
+
+        }
+    }
+
     private class StocksTableSelect implements MouseListener {
 
         @Override
@@ -296,12 +424,4 @@ public class Home{
 
         }
     }
-
-   private class UIRefresher extends TimerTask {
-        @Override
-       public void run() {
-           refreshUI();
-           System.out.println("UIRefreshed");
-       }
-   }
 }
