@@ -121,7 +121,7 @@
               <text value="Welcome {}!"/>
             </properties>
           </component>
-          <grid id="d4f64" layout-manager="GridLayoutManager" row-count="1" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+          <grid id="d4f64" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
             <margin top="0" left="0" bottom="0" right="0"/>
             <constraints>
               <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
@@ -129,31 +129,13 @@
             <properties/>
             <border type="none"/>
             <children>
-              <component id="36eeb" class="javax.swing.JButton" binding="refreshButton">
+              <component id="7a016" class="javax.swing.JButton" binding="viewAccountButton" default-binding="true">
                 <constraints>
                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
-                  <text value="Refresh"/>
-                  <toolTipText value="Refresh UI"/>
-                </properties>
-              </component>
-              <component id="7a016" class="javax.swing.JButton" binding="viewAccountButton" default-binding="true">
-                <constraints>
-                  <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
                   <text value="View Account"/>
                   <toolTipText value="View Account Details"/>
-                </properties>
-              </component>
-              <component id="9d473" class="javax.swing.JButton" binding="exitButton" default-binding="true">
-                <constraints>
-                  <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
-                  <text value="Exit"/>
-                  <toolTipText value="Exit Program"/>
                 </properties>
               </component>
             </children>

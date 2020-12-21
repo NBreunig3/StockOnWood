@@ -34,7 +34,7 @@ public class Home{
 
     public static DecimalFormat twoDecimalPlaces = new DecimalFormat("0.00");
     private Timer timer;
-//    private TimerTask uiRefresh = new UIRefresher();
+    private TimerTask uiRefresh = new UIRefresher();
 //    private boolean timerStarted = false;
     private static boolean firstRun = true;
 
@@ -60,8 +60,8 @@ public class Home{
 //            timer.purge();
 //        }
         // TODO figure out how to only do this once
-//        timer = new Timer(true);
-//        timer.scheduleAtFixedRate(uiRefresh, 0, 10000);
+        timer = new Timer(true);
+        timer.scheduleAtFixedRate(uiRefresh, 0, 10000);
 //        timerStarted = true;
         if (firstRun) {
 //            Thread uiRefresher = new Thread(new UIRefresher());
@@ -80,18 +80,6 @@ public class Home{
         searchBox.addKeyListener(new SearchBox());
         firstRun = false;
         refreshUI();
-        refreshButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                refreshUI();
-            }
-        });
-        exitButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.exit(0);
-            }
-        });
         viewAccountButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -111,10 +99,14 @@ public class Home{
         frame.setVisible(true);
     }
 
-    private class UIRefresher implements Runnable {
+    private void uiRefresh(){
+
+    }
+
+    private class UIRefresher extends TimerTask {
+
         @Override
         public void run() {
-            while (true) {
                 System.out.println("UI Refresh Started");
                 refreshUI();
                 System.out.println("UI Refresh Ended");
@@ -123,7 +115,7 @@ public class Home{
                 } catch (InterruptedException e) {
                     System.out.println("UIRefresher Interrupted: " + e.getMessage());
                 }
-            }
+
         }
     }
 
@@ -332,6 +324,7 @@ public class Home{
         public void mouseClicked(MouseEvent e) {
             if (SwingUtilities.isRightMouseButton(e)) {
                 StockInfo stockInfo = new StockInfo(Facade.getStock(positionsTable.getValueAt(positionsTable.rowAtPoint(e.getPoint()), 1).toString()));
+                timer.cancel();
                 Home.frame.setContentPane(stockInfo.mainPanel);
                 Home.frame.pack();
                 Home.frame.setVisible(true);
@@ -366,6 +359,7 @@ public class Home{
             if (SwingUtilities.isRightMouseButton(e)) {
                 StockInfo stockInfo = new StockInfo(Facade.getStock(searchTable.getValueAt(positionsTable.rowAtPoint(e.getPoint()), 0).toString()));
                 Home.frame.setContentPane(stockInfo.mainPanel);
+                timer.cancel();
                 Home.frame.pack();
                 Home.frame.setVisible(true);
             }
@@ -399,6 +393,7 @@ public class Home{
             if (SwingUtilities.isRightMouseButton(e)) {
                 StockInfo stockInfo = new StockInfo(Facade.getStock(stocksTable.getValueAt(stocksTable.rowAtPoint(e.getPoint()), 0).toString()));
                 Home.frame.setContentPane(stockInfo.mainPanel);
+                timer.cancel();
                 Home.frame.pack();
                 Home.frame.setVisible(true);
             }
